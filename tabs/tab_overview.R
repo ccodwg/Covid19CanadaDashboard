@@ -18,8 +18,8 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                   valueBoxOutput("value_box_summary_fully_vaccinated", width = 3),
                                   bsTooltip("value_box_summary_fully_vaccinated",
                                             paste0(
-                                              "The number of people fully vaccinated is currently available for the following provinces: ",
-                                              paste(table_overview %>% filter(`Cumulative people fully vaccinated` != 0 & Province != "Canada") %>% pull(Province) %>% sort, collapse = ", ")
+                                              "The following provinces have not yet reported any people being fully vaccinated: ",
+                                              paste(table_overview %>% filter(`Cumulative people fully vaccinated` == 0 & !Province %in% c("Canada", "Repatriated")) %>% pull(Province) %>% sort, collapse = ", ")
                                             ),
                                             "bottom",
                                             "hover"),
