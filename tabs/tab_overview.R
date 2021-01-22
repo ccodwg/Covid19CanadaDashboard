@@ -108,5 +108,6 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                   )
                                 )
                               ),
-                        fluidRow(DTOutput("table_prov_overview")))
+                        fluidRow(DTOutput("table_prov_overview"))),
+                        "RP = repatriated travellers."
                         )
