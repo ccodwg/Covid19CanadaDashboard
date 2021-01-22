@@ -21,7 +21,8 @@ if (dir.exists(paste(tempd, "Covid19Canada-master", sep = "/"))) {
          "cases_timeseries_hr.csv", "mortality_timeseries_hr.csv",
          "cases_timeseries_canada.csv", "mortality_timeseries_canada.csv", "recovered_timeseries_canada.csv", "testing_timeseries_canada.csv", "active_timeseries_canada.csv",
          "vaccine_administration_cumulative.csv", "vaccine_administration_timeseries_prov.csv", "vaccine_administration_timeseries_canada.csv",
-         "vaccine_distribution_cumulative.csv", "vaccine_distribution_timeseries_prov.csv", "vaccine_distribution_timeseries_canada.csv"
+         "vaccine_distribution_cumulative.csv", "vaccine_distribution_timeseries_prov.csv", "vaccine_distribution_timeseries_canada.csv",
+         "vaccine_completion_cumulative.csv", "vaccine_completion_timeseries_prov.csv", "vaccine_completion_timeseries_canada.csv"
        )]) {
     file_destination <- paste0("data/", basename(f))
     message("Copying: ", file_destination)

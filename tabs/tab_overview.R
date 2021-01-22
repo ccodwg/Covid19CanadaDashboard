@@ -12,11 +12,19 @@ tab_overview <- tabItem(tabName = "tab_overview",
                               ),
                               fluidRow(
                                 column(
-                                  width = 6,
-                                  offset = 3,
-                                  valueBoxOutput("value_box_summary_doses_administered", width = 4),
-                                  valueBoxOutput("value_box_summary_hosp", width = 4),
-                                  valueBoxOutput("value_box_summary_testing", width = 4)
+                                  width = 8,
+                                  offset = 2,
+                                  valueBoxOutput("value_box_summary_doses_administered", width = 3),
+                                  valueBoxOutput("value_box_summary_fully_vaccinated", width = 3),
+                                  bsTooltip("value_box_summary_fully_vaccinated",
+                                            paste0(
+                                              "The number of people fully vaccinated is currently available for the following provinces: ",
+                                              paste(table_overview %>% filter(`Cumulative people fully vaccinated` != 0 & Province != "Canada") %>% pull(Province) %>% sort, collapse = ", ")
+                                            ),
+                                            "bottom",
+                                            "hover"),
+                                  valueBoxOutput("value_box_summary_hosp", width = 3),
+                                  valueBoxOutput("value_box_summary_testing", width = 3)
                                 )
                               ),
                               column(includeHTML("text/vaccine_text.html"), width = 12, align = "center"),

@@ -4,6 +4,7 @@
 library(shiny)
 library(shinydashboard)
 library(shinydashboardPlus)
+library(shinyBS)
 library(shinyalert) # display pop-ups
 library(metathis)
 library(rsconnect)
@@ -65,8 +66,10 @@ files <- matrix(
     "ts_active_canada", "data/active_timeseries_canada.csv",
     "ts_vaccine_administration", "data/vaccine_administration_timeseries_prov.csv",
     "ts_vaccine_distribution", "data/vaccine_distribution_timeseries_prov.csv",
+    "ts_vaccine_completion", "data/vaccine_completion_timeseries_prov.csv",
     "ts_vaccine_administration_canada", "data/vaccine_administration_timeseries_canada.csv",
     "ts_vaccine_distribution_canada", "data/vaccine_distribution_timeseries_canada.csv",
+    "ts_vaccine_completion_canada", "data/vaccine_completion_timeseries_canada.csv",
     "hosp", "data/hosp.csv",
     "map_hr", "data/hr_map.csv",
     "map_prov", "data/prov_map.csv",
@@ -92,7 +95,7 @@ for (i in 1:nrow(files)) {
 # process data
 
 ## add province short codes, full names, and populations to datasets
-for (i in c("cases", "mortality", "ts_cases", "ts_mortality", "ts_recovered", "ts_testing", "ts_active", "ts_vaccine_administration", "ts_vaccine_distribution")) {
+for (i in c("cases", "mortality", "ts_cases", "ts_mortality", "ts_recovered", "ts_testing", "ts_active", "ts_vaccine_administration", "ts_vaccine_distribution", "ts_vaccine_completion")) {
   assign(
     i,
     get(i) %>%
@@ -275,6 +278,13 @@ table_overview <- ts_cases %>%
     by = "province"
   ) %>%
   left_join(
+    ts_vaccine_completion %>%
+      group_by(province) %>%
+      filter(date_vaccine_completed == date_max) %>%
+      select(province, cvaccine, cumulative_cvaccine),
+    by = "province"
+  ) %>%
+  left_join(
     map_prov %>%
       select(province, pop),
     by = "province"
@@ -282,6 +292,7 @@ table_overview <- ts_cases %>%
   select(province, cases, cumulative_cases,
          active_cases, active_cases_change,
          avaccine, cumulative_avaccine,
+         cvaccine, cumulative_cvaccine,
          hosp_cases, hosp_cases_change,
          deaths, cumulative_deaths,
          recovered, cumulative_recovered,
@@ -296,6 +307,8 @@ table_overview <- ts_cases %>%
       "active_cases_change" = ts_active_canada %>% filter(date_active == date_max) %>% pull(active_cases_change),
       "cumulative_avaccine" = ts_vaccine_administration_canada %>% filter(date_vaccine_administered == date_max) %>% pull(cumulative_avaccine),
       "avaccine" = ts_vaccine_administration_canada %>% filter(date_vaccine_administered == date_max) %>% pull(avaccine),
+      "cumulative_cvaccine" = ts_vaccine_completion_canada %>% filter(date_vaccine_completed == date_max) %>% pull(cumulative_cvaccine),
+      "cvaccine" = ts_vaccine_completion_canada %>% filter(date_vaccine_completed == date_max) %>% pull(cvaccine),     
       "hosp_cases" = sum(hosp$hosp_cases),
       "hosp_cases_change" = sum(hosp$hosp_cases_change),
       "deaths" = ts_mortality_canada %>% filter(date_death_report == date_max) %>% pull(deaths),
@@ -313,6 +326,8 @@ table_overview <- ts_cases %>%
                   active_cases_change = 0,
                   avaccine = 0,
                   cumulative_avaccine = 0,
+                  cvaccine = 0,
+                  cumulative_cvaccine = 0,
                   hosp_cases = 0,
                   hosp_cases_change = 0,
                   deaths = 0,
@@ -334,6 +349,7 @@ table_overview <- ts_cases %>%
     cumulative_cases, cases, cases_per_100k, cumulative_cases_per_100k,
     active_cases, active_cases_change, active_cases_per_100k,
     avaccine, cumulative_avaccine,
+    cvaccine, cumulative_cvaccine,
     hosp_cases, hosp_cases_change, hosp_per_100k,
     cumulative_deaths, deaths, cumulative_deaths_per_100k,
     cumulative_recovered, recovered,
@@ -350,6 +366,8 @@ table_overview <- ts_cases %>%
     `Active cases per 100k` = active_cases_per_100k,
     `Vaccine doses administered (new)` = avaccine,
     `Cumulative vaccine doses administered` = cumulative_avaccine,
+    `People fully vaccinated (new)` = cvaccine,
+    `Cumulative people fully vaccinated` = cumulative_cvaccine,
     `Hospitalized per 100k` = hosp_per_100k,
     `Hospitalized` = hosp_cases,
     `Hospitalized (change)` = hosp_cases_change,
