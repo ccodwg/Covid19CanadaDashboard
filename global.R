@@ -50,8 +50,10 @@ news <- paste(readLines("data/news.txt"), collapse = "\n")
 ## list data files to be loaded
 files <- matrix(
   c(
-    "cases", "data/cases.csv",
-    "mortality", "data/mortality.csv",
+    "cases_2020", "data/cases_2020.csv",
+    "cases_2021", "data/cases_2021.csv",
+    "mortality_2020", "data/mortality_2020.csv",
+    "mortality_2021", "data/mortality_2021.csv",
     "ts_cases", "data/cases_timeseries_prov.csv",
     "ts_mortality", "data/mortality_timeseries_prov.csv",
     "ts_recovered", "data/recovered_timeseries_prov.csv",
@@ -93,6 +95,10 @@ for (i in 1:nrow(files)) {
 }
 
 # process data
+
+## merge individual-level data
+cases <- bind_rows(cases_2020, cases_2021)
+mortality <- bind_rows(mortality_2020, mortality_2021)
 
 ## add province short codes, full names, and populations to datasets
 for (i in c("cases", "mortality", "ts_cases", "ts_mortality", "ts_recovered", "ts_testing", "ts_active", "ts_vaccine_administration", "ts_vaccine_distribution", "ts_vaccine_completion")) {
