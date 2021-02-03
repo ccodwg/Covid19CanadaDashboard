@@ -70,4 +70,10 @@ unlink(paste(tempd, "Covid19Canada-master", sep = "/"), recursive = TRUE) # dele
 
 # write latest commit message
 cat("\n", file = "data/news.txt")
-tryCatch(cat(paste0(fromJSON("https://api.github.com/repos/ccodwg/Covid19Canada/events")[[1]]$payload$commits[[1]]$message, "\n"), file = "data/news.txt"), warning = message("Failed to read latest commit message from GitHub."))
+news <- try(fromJSON("https://api.github.com/repos/ccodwg/Covid19Canada/events"))
+if (!"try-error" %in% class(news)) {
+  news <- news$payload$commits
+  news <- news[lengths(news) != 0] # remove null elements
+  news <- news[[1]]$message # get most recent commit message
+  cat(paste0(news, "\n"), file = "data/news.txt")
+}
