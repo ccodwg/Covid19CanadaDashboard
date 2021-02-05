@@ -79,7 +79,7 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                         min = 30,
                                         max = 1000,
                                         step = 100,
-                                        value = NULL
+                                        value = 30
                                       ),
                                       width = 12,
                                       align = "center"
