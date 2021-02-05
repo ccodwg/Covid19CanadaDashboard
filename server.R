@@ -645,14 +645,17 @@ server <- function(input, output, session) {
                 by = c("Province" = "province")) %>%
       mutate(Province = coalesce(province_short, Province)) %>%
       select(-province_short) %>%
-      datatable(class = "stripe compact hover", rownames = FALSE, options = list(
-        paging = FALSE,
-        scrollX = TRUE,
-        compact = TRUE,
-        autoWidth = TRUE,
-        ### centre all but the first column
-        columnDefs = list(list(className = 'dt-center', targets = 1:(ncol(.) - 1)))
-      )) %>%
+      DT::datatable(class = "stripe compact hover", rownames = FALSE, extensions = "FixedColumns",
+                    options = list(
+                      paging = FALSE,
+                      scrollX = TRUE,
+                      compact = TRUE,
+                      autoWidth = TRUE,
+                      ### centre all but the first column
+                      columnDefs = list(list(className = 'dt-center', targets = 1:(ncol(.) - 1))),
+                      ### freeze province column
+                      fixedColumns = list(leftColumns = 1)
+                      )) %>%
       formatRound(columns = c("Cumulative cases", "Cases (new)", "Active cases", "Active cases (change)", "Cumulative vaccine doses administered", "Vaccine doses administered (new)", "Cumulative people fully vaccinated", "People fully vaccinated (new)", "Hospitalized", "Hospitalized (change)", "Cumulative deaths", "Deaths (new)", "Cumulative recovered", "Recovered (new)", "Cumulative testing", "Testing (new)"), digits = 0) %>%
       formatRound(columns = c("Cases (new) per 100k", "Cumulative cases per 100k", "Active cases per 100k", "Hospitalized per 100k", "Cumulative deaths per 100k"), digits = 1) %>%
       formatRound(columns = c("Cumulative testing per 100k"), digits = 0)
