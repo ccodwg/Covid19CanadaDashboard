@@ -974,7 +974,7 @@ server <- function(input, output, session) {
     }
     while (length(unique(bins)) != length(bins)) {
       n_quantile <- n_quantile - 1
-      probs <- seq(0, 1, length.out = n_quantilem + 1)
+      probs <- seq(0, 1, length.out = n_quantile + 1)
       bins <- quantile(dat$count, probs, na.rm = TRUE, names = FALSE)
       ### ensure bins are integers for absolute scale
       if (input$scale_choropleth_hr == "absolute") {
