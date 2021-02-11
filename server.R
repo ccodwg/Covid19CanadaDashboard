@@ -1512,6 +1512,83 @@ server <- function(input, output, session) {
     plot_demographics(data_mortality(), "Reported deaths")
   })
   
+  # vaccine tab-specific plots
+  
+  ## vaccine gap data
+  data_vaccine_gap <- reactive({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range)
+    
+    ### merge data
+    dat <- full_join(
+      data_ts_vaccine_administration() %>%
+        rename(date_vaccine = date_vaccine_administered) %>%
+        select(province, date_vaccine, cumulative_avaccine),
+      data_ts_vaccine_distribution() %>%
+        rename(date_vaccine = date_vaccine_distributed) %>%
+        select(province, date_vaccine, cumulative_dvaccine),
+      by = c("province", "date_vaccine")
+    ) %>%
+      replace_na(list(cumulative_avaccine = 0)) # 2020-12-13 is NA for avaccine
+    
+    ### collapse observations into one row per date
+    dat %>%
+      select(date_vaccine, cumulative_dvaccine, cumulative_avaccine) %>%
+      group_by(date_vaccine) %>%
+      summarize(across(everything(), sum), .groups = "drop")
+    
+  })
+  
+  ## vaccine gap title
+  output$title_vaccine_gap <- renderText({
+    
+    ### don't run without inputs defined
+    req(input$prov)
+    
+    if (input$prov != "all") {
+      paste("Vaccine gap in", input$prov)
+    } else {
+      "Vaccine gap in Canada"
+    }
+    
+  })
+  
+  ## vaccine gap plot
+  output$plot_vaccine_gap <- renderPlotly({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range)
+    
+    ### get merged vaccine data
+    dat <- data_vaccine_gap()
+    
+    ### plot
+    dat %>%
+    plot_ly(
+      x = ~date_vaccine, 
+      y = ~cumulative_avaccine, 
+      name = "Vaccine administered", 
+      type = "scatter",
+      mode = "none",
+      fill = "tozeroy",
+      fillcolor = "rgba(0, 0, 255, 0.3)"
+      ) %>%
+      add_trace(y = ~cumulative_dvaccine, 
+                name = "Vaccine distributed",
+                fill = "tonexty",
+                fillcolor = "rgba(0, 0, 0, 0.7)"
+                ) %>%
+      layout(
+        xaxis = list(title = "Date", fixedrange = TRUE),
+        yaxis = list(title = "Vaccine doses", fixedrange = TRUE),
+        legend = plotly_legend
+      ) %>%
+      config(displaylogo = FALSE,
+             modeBarButtonsToRemove = plotly_buttons)
+    
+  })
+  
   # travel tab
   
   ## load travel map
