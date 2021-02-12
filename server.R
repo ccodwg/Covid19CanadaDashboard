@@ -1582,7 +1582,8 @@ server <- function(input, output, session) {
       layout(
         xaxis = list(title = "Date", fixedrange = TRUE),
         yaxis = list(title = "Vaccine doses", fixedrange = TRUE),
-        legend = plotly_legend
+        legend = plotly_legend,
+        hovermode = "x unified"
       ) %>%
       config(displaylogo = FALSE,
              modeBarButtonsToRemove = plotly_buttons)
