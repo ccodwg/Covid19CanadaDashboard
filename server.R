@@ -1568,14 +1568,14 @@ server <- function(input, output, session) {
     plot_ly(
       x = ~date_vaccine, 
       y = ~cumulative_avaccine, 
-      name = "Vaccine administered", 
+      name = "Administered", 
       type = "scatter",
       mode = "none",
       fill = "tozeroy",
       fillcolor = "rgba(0, 0, 255, 0.3)"
       ) %>%
       add_trace(y = ~cumulative_dvaccine, 
-                name = "Vaccine distributed",
+                name = "Distributed",
                 fill = "tonexty",
                 fillcolor = "rgba(0, 0, 0, 0.7)"
                 ) %>%
