@@ -1089,7 +1089,7 @@ server <- function(input, output, session) {
   # daily/cumulative numbers plots
   
   ## function: daily/cumulative numbers plot title
-  title_daily_cumulative <- function(fun_data, var_date, var_val, lab_title, exclude_repatriated = FALSE, filter_province = input$prov) {
+  title_daily_cumulative <- function(fun_data, var_date, var_val, lab_title, exclude_repatriated = FALSE, by_province = FALSE, filter_province = input$prov) {
 
     ### don't run without inputs defined
     req(input$prov, input$date_range)
@@ -1106,7 +1106,11 @@ server <- function(input, output, session) {
     if (n == 0) {
       paste0(lab_title, " in ", filter_province)
     } else {
-      paste0(lab_title, " in ", filter_province, " (n = ", format(n, big.mark = ","), ")")
+      if (filter_province == "Canada" & by_province) {
+        paste0(lab_title, " in ", filter_province, " by province (n = ", format(n, big.mark = ","), ")")
+      } else {
+        paste0(lab_title, " in ", filter_province, " (n = ", format(n, big.mark = ","), ")")
+      }
     }
   }
   
@@ -1237,37 +1241,37 @@ server <- function(input, output, session) {
   })
   
   ## cumulative numbers: cases
-  output$title_cumulative_cases <- renderText({title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Cumulative reported cases", exclude_repatriated = TRUE)})
+  output$title_cumulative_cases <- renderText({title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Cumulative reported cases", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_cases <- renderPlotly({
     plot_cumulative(data_ts_cases(), "date_report", "cumulative_cases", "Report date", "Cumulative reported cases")
   })
   
   ## cumulative numbers: mortality
-  output$title_cumulative_mortality <- renderText({title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Cumulative reported deaths", exclude_repatriated = TRUE)})
+  output$title_cumulative_mortality <- renderText({title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Cumulative reported deaths", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_mortality <- renderPlotly({
     plot_cumulative(data_ts_mortality(), "date_death_report", "cumulative_deaths", "Date", "Cumulative reported deaths")
   })
   
   ## cumulative numbers: recovered
-  output$title_cumulative_recovered <- renderText({title_daily_cumulative(data_ts_recovered(), "date_recovered", "recovered", "Cumulative recovered", exclude_repatriated = TRUE)})
+  output$title_cumulative_recovered <- renderText({title_daily_cumulative(data_ts_recovered(), "date_recovered", "recovered", "Cumulative recovered", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_recovered <- renderPlotly({
     plot_cumulative(data_ts_recovered(), "date_recovered", "cumulative_recovered", "Date", "Cumulative recovered")
   })
   
   ## cumulative numbers: testing
-  output$title_cumulative_testing <- renderText({title_daily_cumulative(data_ts_testing(), "date_testing", "testing", "Cumulative testing", exclude_repatriated = TRUE)})
+  output$title_cumulative_testing <- renderText({title_daily_cumulative(data_ts_testing(), "date_testing", "testing", "Cumulative testing", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_testing <- renderPlotly({
     plot_cumulative(data_ts_testing(), "date_testing", "cumulative_testing", "Date", "Cumulative testing")
   })
   
   ## cumulative numbers: vaccine administration
-  output$title_cumulative_vaccine_administration <- renderText({title_daily_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Cumulative vaccine doses administered", exclude_repatriated = TRUE)})
+  output$title_cumulative_vaccine_administration <- renderText({title_daily_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Cumulative vaccine doses administered", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_vaccine_administration <- renderPlotly({
     plot_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "cumulative_avaccine", "Date", "Cumulative vaccine doses administered")
   })
   
   ## cumulative numbers: vaccine distribution
-  output$title_cumulative_vaccine_distribution <- renderText({title_daily_cumulative(data_ts_vaccine_distribution(), "date_vaccine_distributed", "dvaccine", "Cumulative vaccine doses distributed", exclude_repatriated = TRUE)})
+  output$title_cumulative_vaccine_distribution <- renderText({title_daily_cumulative(data_ts_vaccine_distribution(), "date_vaccine_distributed", "dvaccine", "Cumulative vaccine doses distributed", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_vaccine_distribution <- renderPlotly({
     plot_cumulative(data_ts_vaccine_distribution(), "date_vaccine_distributed", "cumulative_dvaccine", "Date", "Cumulative vaccine doses distributed")
   })
