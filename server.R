@@ -115,7 +115,7 @@ server <- function(input, output, session) {
   }
   
   # reactive data
-
+  
   ## function: get and filter data
   get_data <- function(dataset, var_date, filter_province = ifelse(isTruthy(input[["prov"]]), input$prov, "Canada"), filter_date_lower = ifelse(isTruthy(input[["date_range"]]), input$date_range[1], date_min), filter_date_upper = ifelse(isTruthy(input[["date_range"]]), input$date_range[2], date_max), filter_province_ignore = FALSE, filter_date_ignore = FALSE) {
     get(dataset) %>%
@@ -202,6 +202,11 @@ server <- function(input, output, session) {
   ## vaccine distribution time series
   data_ts_vaccine_distribution <- reactive({
     get_data("ts_vaccine_distribution", "date_vaccine_distributed")
+  })
+  
+  ## vaccine distribution time series
+  data_ts_vaccine_completion <- reactive({
+    get_data("ts_vaccine_completion", "date_vaccine_completed")
   })
   
   ## case time series (health regions)
@@ -367,8 +372,8 @@ server <- function(input, output, session) {
           group_by(province_short) %>%
           slice_tail(n = input$window_choropleth_overview_cases) %>%
           summarize(cases = sum(cases), .groups = "drop"),
-      by = "province_short"
-    )
+        by = "province_short"
+      )
     
     ### even out colour scale by rooting case numbers
     dat <- dat %>%
@@ -385,7 +390,7 @@ server <- function(input, output, session) {
       arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
       stringsAsFactors = FALSE
-      )
+    )
     
     ### manually nudge some label positions (x = label, ax = arrowhead tail)
     labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
@@ -416,7 +421,7 @@ server <- function(input, output, session) {
         stroke = I("#000000"),
         span = I(1.5),
         hoverinfo = "none"
-        ) %>%
+      ) %>%
       add_annotations(
         data = labs,
         x = ~ x,
@@ -633,7 +638,7 @@ server <- function(input, output, session) {
   
   # province summary table for overview tab
   output$table_prov_overview <- renderDT({
-
+    
     table_overview %>%
       ### show NA instead of 0 for "people fully vaccinated" (info not yet available)
       mutate(
@@ -655,7 +660,7 @@ server <- function(input, output, session) {
                       columnDefs = list(list(className = 'dt-center', targets = 1:(ncol(.) - 1))),
                       ### freeze province column
                       fixedColumns = list(leftColumns = 1)
-                      )) %>%
+                    )) %>%
       formatRound(columns = c("Cumulative cases", "Cases (new)", "Active cases", "Active cases (change)", "Cumulative vaccine doses administered", "Vaccine doses administered (new)", "Cumulative people fully vaccinated", "People fully vaccinated (new)", "Hospitalized", "Hospitalized (change)", "Cumulative deaths", "Deaths (new)", "Cumulative recovered", "Recovered (new)", "Cumulative testing", "Testing (new)"), digits = 0) %>%
       formatRound(columns = c("Cases (new) per 100k", "Cumulative cases per 100k", "Active cases per 100k", "Hospitalized per 100k", "Cumulative deaths per 100k"), digits = 1) %>%
       formatRound(columns = c("Cumulative testing per 100k"), digits = 0)
@@ -698,10 +703,10 @@ server <- function(input, output, session) {
     
     ### render title
     if (val_scale == "linear") {
-            paste0(lab_title, " (7-day rolling average)")
-      } else if (val_scale == "logarithmic") {
-            paste0(lab_title, " (7-day rolling average, logarithmic scale)")
-        }
+      paste0(lab_title, " (7-day rolling average)")
+    } else if (val_scale == "logarithmic") {
+      paste0(lab_title, " (7-day rolling average, logarithmic scale)")
+    }
   }
   
   ## function: flattening plot
@@ -725,7 +730,7 @@ server <- function(input, output, session) {
           slice_head(n = 1) %>%
           rename(date_start = !!sym(var_date)) %>%
           select(province_short, date_start),
-          by = "province_short"
+        by = "province_short"
       ) %>%
       filter(!!sym(var_date) >= date_start) %>%
       mutate(
@@ -1090,7 +1095,7 @@ server <- function(input, output, session) {
   
   ## function: daily/cumulative numbers plot title
   title_daily_cumulative <- function(fun_data, var_date, var_val, lab_title, exclude_repatriated = FALSE, by_province = FALSE, filter_province = input$prov) {
-
+    
     ### don't run without inputs defined
     req(input$prov, input$date_range)
     
@@ -1149,9 +1154,9 @@ server <- function(input, output, session) {
                   var_val == "avaccine" ~ paste0("Vaccine doses administered: ", dat[["lab_val"]]),
                   var_val == "dvaccine" ~ paste0("Vaccine doses distributed: ", dat[["lab_val"]]),
                   TRUE ~ paste0(capitalize(var_val), ": ", dat[["lab_val"]])
-                  )
                 )
-              ) %>%
+              )
+      ) %>%
       add_bars() %>%
       layout(
         xaxis = list(title = lab_x, fixedrange = TRUE),
@@ -1468,7 +1473,7 @@ server <- function(input, output, session) {
                       "Age group: ", ifelse(as.character(dat[["age"]]) == "NR", "Not reported", as.character(dat[["age"]])), "\n",
                       "Count: ", formatC(dat[["Female"]], big.mark = ",")
                     )
-                  )
+          )
         else .
       }  %>%
       {
@@ -1569,20 +1574,20 @@ server <- function(input, output, session) {
     
     ### plot
     dat %>%
-    plot_ly(
-      x = ~date_vaccine, 
-      y = ~cumulative_avaccine, 
-      name = "Administered", 
-      type = "scatter",
-      mode = "none",
-      fill = "tozeroy",
-      fillcolor = "rgba(0, 0, 255, 0.3)"
+      plot_ly(
+        x = ~date_vaccine, 
+        y = ~cumulative_avaccine, 
+        name = "Administered", 
+        type = "scatter",
+        mode = "none",
+        fill = "tozeroy",
+        fillcolor = "rgba(0, 0, 255, 0.3)"
       ) %>%
       add_trace(y = ~cumulative_dvaccine, 
                 name = "Distributed",
                 fill = "tonexty",
                 fillcolor = "rgba(0, 0, 0, 0.7)"
-                ) %>%
+      ) %>%
       layout(
         xaxis = list(title = "Date", fixedrange = TRUE),
         yaxis = list(title = "Vaccine doses", fixedrange = TRUE),
@@ -1591,6 +1596,356 @@ server <- function(input, output, session) {
       ) %>%
       config(displaylogo = FALSE,
              modeBarButtonsToRemove = plotly_buttons)
+    
+  })
+  
+  ## percent fully vaccinated data
+  data_fully_vaccinated <- reactive({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range)
+    
+    ### merge data
+    dat <- full_join(
+      data_ts_vaccine_completion() %>%
+        rename(date_vaccine = date_vaccine_completed) %>%
+        select(province, date_vaccine, cumulative_cvaccine),
+      data_ts_vaccine_administration() %>%
+        rename(date_vaccine = date_vaccine_administered) %>%
+        select(province, date_vaccine, cumulative_avaccine),
+      by = c("province", "date_vaccine")
+    ) %>%
+      replace_na(list(cumulative_avaccine = 0,
+                      cumulative_cvaccine = 0)) # 2020-12-13 is NA for avaccine
+    
+    ### collapse observations into one row per date
+    dat %>%
+      ### merge short names
+      left_join(map_prov %>% select(province, province_short),
+                by = c("province")) %>% 
+      select(date_vaccine, cumulative_avaccine, cumulative_cvaccine, province_short) %>%
+      group_by(date_vaccine, province_short) %>%
+      summarize(across(everything(), sum), .groups = "drop") %>% 
+      mutate(
+        full_vaxx = 100 * cumulative_cvaccine / cumulative_avaccine,
+        lab_percent = paste0(formatC(full_vaxx, format = "f", digit = 2), "%")
+      ) %>% 
+      ungroup() %>% 
+      group_by(province_short) %>% 
+      filter(date_vaccine == max(date_vaccine))
+    
+  })
+  
+  ## percent fully vaccinated title
+  output$title_fully_vaccinated <- renderText({
+    
+    ### don't run without inputs defined
+    req(input$prov)
+    
+    if (input$prov != "all") {
+      paste("Percent fully vaccinated in", input$prov)
+    } else {
+      "Percent fully vaccinated in Canada"
+    }
+    
+  })
+  
+  ## percent fully vaccinated plot
+  output$plot_fully_vaccinated <- renderPlotly({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range)
+    
+    ### get merged vaccine data
+    dat <- data_fully_vaccinated()
+    
+    ### plot data
+    dat %>%
+      plot_ly() %>%
+      add_trace(
+        x = ~ province_short,
+        y = ~ full_vaxx,
+        type = "bar",
+        color = ~ province_short,
+        colors = palette_province_short,
+        hoverinfo = "text",
+        hovertext = ~ paste0(
+          "Province: ", dat$province_short, "\n",
+          "Fully vaccinated", ": ", dat$cumulative_cvaccine, "\n",
+          "Percent of total: ", dat$lab_percent
+        )
+      ) %>% 
+      layout(
+        xaxis = list(title = "Province", fixedrange = TRUE),
+        yaxis = list(title = "Percent", fixedrange = TRUE),
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             modeBarButtonsToRemove = plotly_buttons)
+    
+  })
+  
+  ## doses administered by province (absolute/per-capita) data
+  
+  data_avaccine_per_capita <- reactive({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range, input$scale_comp_avacc)
+    
+    
+    ### convert to per-capita (if applicable)
+    if (input$scale_comp_avacc == "per-capita") {
+      data_ts_vaccine_administration() %>% 
+        # left_join(map_prov %>% select(province, pop), by = c("province")) %>% 
+        group_by(province) %>% 
+        ### convert to per-capita (if applicable)
+        filter(date_vaccine_administered == max(date_vaccine_administered)) %>% 
+        ungroup() %>% 
+        dplyr::mutate(avaccine_per_capita = cumulative_avaccine / pop * 100000) %>%
+        ### create labels for values
+        dplyr::mutate(lab_avaccine_per_capita = formatC(avaccine_per_capita, digits = 2, format = "f", big.mark = ",")) 
+      ### merge short names
+      # left_join(map_prov %>% select(province, province_short), by = c("province"))
+      
+    } else {
+      data_ts_vaccine_administration() %>% 
+        group_by(province) %>% 
+        ### convert to per-capita (if applicable)
+        filter(date_vaccine_administered == max(date_vaccine_administered)) %>% 
+        summarize(pop = max(pop), 
+                  avaccine_per_capita := mean(cumulative_avaccine), .groups = "drop") %>% 
+        ### create labels for values
+        dplyr::mutate(lab_avaccine_per_capita = formatC(avaccine_per_capita, digits = 2, format = "f", big.mark = ",")) %>% 
+        ### merge short names
+        left_join(map_prov %>% select(province, province_short), by = c("province"))
+    }
+    
+  })
+  
+  ## doses administered by province (absolute/per-capita) title
+  
+  output$title_avaccine_per_capita <- renderText({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$scale_comp_avacc)
+    
+    if (input$prov != "all") {
+      if (input$scale_comp_avacc == "per-capita") {
+        paste("Doses administered per 100,000 in", input$prov)
+      } else {
+        paste("Total doses administered in", input$prov)
+      }
+    } else {
+      if (input$scale_comp_avacc == "per-capita") {
+        paste0("Doses administered per 100,000 in Canada")
+      } else {
+        paste0("Total doses administered in Canada")
+      }
+    }
+    
+  })
+  
+  ## doses administered by province (absolute/per-capita) plot
+  
+  output$plot_avaccine_per_capita <- renderPlotly({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range, input$scale_comp_avacc)
+    
+    ### get merged vaccine data
+    dat <- data_avaccine_per_capita()
+    
+    ### add per-capita to y-axis label (if applicable)
+    # input$scale_comp_avacc == "per-capita"
+    if (input$scale_comp_avacc == "per-capita") {
+      lab_y <- "Vaccine doses administered per 100,000"
+    } else {
+      lab_y <- "Total vaccine doses administered"
+    }
+    
+    ### plot data
+    dat %>%
+      plot_ly() %>%
+      add_trace(
+        x = ~ province_short,
+        y = ~ avaccine_per_capita,
+        type = "bar",
+        color = ~ province_short,
+        colors = palette_province_short,
+        hoverinfo = "text",
+        hovertext = paste0(
+          dat$province_short, ": ", dat$lab_avaccine_per_capita
+        )
+      ) %>% 
+      layout(
+        xaxis = list(title = "Province", fixedrange = TRUE),
+        yaxis = list(title = lab_y, fixedrange = TRUE),
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             modeBarButtonsToRemove = plotly_buttons)
+    
+  })
+  
+  ## doses distributed by province (absolute/per-capita) data
+  
+  data_dvaccine_per_capita <- reactive({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range, input$scale_comp_dvacc)
+    
+    
+    ### convert to per-capita (if applicable)
+    if (input$scale_comp_dvacc == "per-capita") {
+      data_ts_vaccine_distribution() %>% 
+        # left_join(map_prov %>% select(province, pop), by = c("province")) %>% 
+        group_by(province) %>% 
+        ### convert to per-capita (if applicable)
+        filter(date_vaccine_distributed == max(date_vaccine_distributed)) %>% 
+        ungroup() %>% 
+        dplyr::mutate(dvaccine_per_capita = cumulative_dvaccine / pop * 100000) %>%
+        ### create labels for values
+        dplyr::mutate(lab_dvaccine_per_capita = formatC(dvaccine_per_capita, digits = 2, format = "f", big.mark = ","))
+      
+    } else {
+      data_ts_vaccine_distribution() %>% 
+        group_by(province) %>% 
+        ### convert to per-capita (if applicable)
+        filter(date_vaccine_distributed == max(date_vaccine_distributed)) %>%
+        summarize(pop = max(pop), 
+                  dvaccine_per_capita := mean(cumulative_dvaccine), .groups = "drop") %>% 
+        ### create labels for values
+        dplyr::mutate(lab_dvaccine_per_capita = formatC(dvaccine_per_capita, digits = 2, format = "f", big.mark = ",")) %>% 
+        ### merge short names
+        left_join(map_prov %>% select(province, province_short), by = c("province"))
+    }
+    
+  })
+  
+  ## doses distributed by province (absolute/per-capita) title
+  
+  output$title_dvaccine_per_capita <- renderText({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$scale_comp_dvacc)
+    
+    if (input$prov != "all") {
+      if (input$scale_comp_dvacc == "per-capita") {
+        paste("Doses distributed per 100,000 in", input$prov)
+      } else {
+        paste("Total doses distributed in", input$prov)
+      }
+    } else {
+      if (input$scale_comp_dvacc == "per-capita") {
+        paste0("Doses distributed per 100,000 in Canada")
+      } else {
+        paste0("Total doses distributed in Canada")
+      }
+    }
+    
+  })
+  
+  ## doses distributed by province (absolute/per-capita) plot
+  
+  output$plot_dvaccine_per_capita <- renderPlotly({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range, input$scale_comp_dvacc)
+    
+    ### get merged vaccine data
+    dat <- data_dvaccine_per_capita()
+    
+    ### add per-capita to y-axis label (if applicable)
+    if (input$scale_comp_dvacc == "per-capita") {
+      lab_y <- "Vaccine doses distributed per 100,000"
+    } else {
+      lab_y <- "Total vaccine doses distributed"
+    }
+    
+    ### plot data
+    dat %>%
+      plot_ly() %>%
+      add_trace(
+        x = ~ province_short,
+        y = ~ dvaccine_per_capita,
+        type = "bar",
+        color = ~ province_short,
+        colors = palette_province_short,
+        hoverinfo = "text",
+        hovertext = paste0(
+          dat$province_short, ": ", dat$lab_dvaccine_per_capita
+        )
+      ) %>% 
+      layout(
+        xaxis = list(title = "Province", fixedrange = TRUE),
+        yaxis = list(title = lab_y, fixedrange = TRUE),
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             modeBarButtonsToRemove = plotly_buttons)
+    
+  })
+  
+  # summary table for time to percent vaccinated by province
+  
+  output$table_prov_time_to_pct_vaccination <- renderDT({
+    
+    req(input$prov, input$date_range, input$pct_vaccination)
+    
+    ## create dataframe by province
+    table_time_to_pct_vaccination <- data_ts_vaccine_administration() %>% 
+      select(date_vaccine_administered, avaccine, cumulative_avaccine, province) %>%
+      dplyr::group_by(date_vaccine_administered, province) %>% 
+      dplyr::summarize(
+        avaccine = sum(avaccine),
+        cumulative_avaccine = sum(cumulative_avaccine),
+        .groups = "drop") %>%
+      ungroup() %>% 
+      mutate(province = as.factor(province)) %>% 
+      group_by(province) %>% 
+      dplyr::mutate(
+        # current_speed = mean(avaccine)
+        roll_avg = rollapply(avaccine, 7, mean, align = "right", partial = TRUE),
+        ### minimum value should be 1 (for log plot)
+        roll_avg = ifelse(roll_avg < 1, 1, roll_avg),
+        roll_avg_lab = ifelse(roll_avg == 1, "≤1", formatC(roll_avg, digits = 1, format = "f", big.mark = ","))
+      ) %>% 
+      arrange(date_vaccine_administered) %>% 
+      dplyr::mutate(
+        current_cum = last(cumulative_avaccine)
+      ) %>% 
+      filter(date_vaccine_administered == max(date_vaccine_administered)) %>% 
+      ungroup() %>% 
+      left_join(map_prov, by = "province") %>% 
+      dplyr::mutate(
+        total_needed = (input$pct_vaccination/100) * 2 * pop,
+        date_to_vaxx = max(date_vaccine_administered) + round((total_needed - current_cum) / roll_avg, 0),
+        days_to_vaxx = date_to_vaxx - date_vaccine_administered,
+        weeks_to_vaxx = as.numeric(days_to_vaxx) / 7,
+        mths_to_vaxx = as.numeric(days_to_vaxx) / 12
+      ) %>% 
+      mutate_if(is.numeric, round, 1) %>% 
+      select(province, pop, current_cum, roll_avg_lab, total_needed, date_to_vaxx) %>% 
+      dplyr::rename(
+        "Province" = province,
+        "Population" = pop,
+        "Total Doses Administered" = current_cum,
+        "7-day Avg. Rate of Vaccination" = roll_avg_lab,
+        "Remaining Vaccinations Needed" = total_needed,
+        "Expected Date to Reach % Vaccination" = date_to_vaxx)
+    
+    table_time_to_pct_vaccination %>%
+      DT::datatable(class = "stripe compact hover", rownames = FALSE, extensions = "FixedColumns",
+                    options = list(
+                      paging = FALSE,
+                      scrollX = TRUE,
+                      compact = TRUE,
+                      autoWidth = TRUE,
+                      ### centre all but the first column
+                      columnDefs = list(list(className = 'dt-center', targets = 1:(ncol(.) - 1))),
+                      ### freeze province column
+                      fixedColumns = list(leftColumns = 1:(ncol(.) - 1))
+                    ))
     
   })
   
@@ -1736,7 +2091,7 @@ server <- function(input, output, session) {
       rename(case_count_single = `0`,
              case_count_multiple = `1`) %>%
       mutate(case_count_total = case_count_single + case_count_multiple)
-      
+    
     ### load map
     geo_travel <- load_geo_travel()
     
@@ -1824,7 +2179,7 @@ server <- function(input, output, session) {
                       ". ")),
                "Only individual cases definitively linked to international travel as their route of exposure were included in this dataset (n = ",
                format(data_cases_travel_n(), big.mark = ","), ").")
-        )
+      )
     }
   })
   
