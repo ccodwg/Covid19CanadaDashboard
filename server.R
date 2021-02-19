@@ -1939,13 +1939,17 @@ server <- function(input, output, session) {
         "Total Doses Administered" = current_cum_lab,
         "7-day Avg. Rate of Vaccination" = roll_avg_lab,
         "Remaining Vaccinations Needed" = total_needed_lab,
-        "Expected Date to Reach % Vaccination" = date_to_vaxx)
+        !!paste0("Expected Date to Reach ", input$pct_vaccination, "% Fully Vaccinated") := date_to_vaxx)
     
     table_time_to_pct_vaccination %>%
       DT::datatable(class = "stripe compact hover", 
                     rownames = FALSE, 
                     extensions = "FixedColumns",
                     escape = FALSE,
+                    caption = tags$caption(
+                      style = "caption-side: bottom; text-align: left; margin: 8px 0;",
+                      "The expected date column is calculated based on the 7-day average rate of daily vaccine doses administered and assumes that every individual receives 2 doses. This calculation does not account for delays between doses."
+                    ),
                     options = list(
                       dom = "t",
                       paging = FALSE,
