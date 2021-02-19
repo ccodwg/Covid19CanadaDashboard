@@ -99,7 +99,7 @@ tab_vaccines <- tabItem(tabName = "tab_vaccines",
                                     min = 30,
                                     max = 100,
                                     step = 1,
-                                    value = 30
+                                    value = 70
                                   ),
                                   width = 12,
                                   align = "center"

@@ -402,8 +402,6 @@ info_testing <- info_testing %>%
 
 # load 
 
-
-
 # load spatial data
 
 ## load simple province map

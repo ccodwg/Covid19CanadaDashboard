@@ -1621,13 +1621,13 @@ server <- function(input, output, session) {
     ### collapse observations into one row per date
     dat %>%
       ### merge short names
-      left_join(map_prov %>% select(province, province_short),
+      left_join(map_prov %>% select(province, province_short, pop),
                 by = c("province")) %>% 
-      select(date_vaccine, cumulative_avaccine, cumulative_cvaccine, province_short) %>%
+      select(date_vaccine, pop, cumulative_cvaccine, province_short) %>%
       group_by(date_vaccine, province_short) %>%
       summarize(across(everything(), sum), .groups = "drop") %>% 
       mutate(
-        full_vaxx = 100 * cumulative_cvaccine / cumulative_avaccine,
+        full_vaxx = 100 * cumulative_cvaccine / pop,
         lab_percent = paste0(formatC(full_vaxx, format = "f", digit = 2), "%")
       ) %>% 
       ungroup() %>% 
@@ -1672,7 +1672,7 @@ server <- function(input, output, session) {
         hovertext = ~ paste0(
           "Province: ", dat$province_short, "\n",
           "Fully vaccinated", ": ", dat$cumulative_cvaccine, "\n",
-          "Percent of total: ", dat$lab_percent
+          "Percent of total population: ", dat$lab_percent
         )
       ) %>% 
       layout(
@@ -1908,7 +1908,8 @@ server <- function(input, output, session) {
         roll_avg = rollapply(avaccine, 7, mean, align = "right", partial = TRUE),
         ### minimum value should be 1 (for log plot)
         roll_avg = ifelse(roll_avg < 1, 1, roll_avg),
-        roll_avg_lab = ifelse(roll_avg == 1, "≤1", formatC(roll_avg, digits = 1, format = "f", big.mark = ","))
+        roll_avg_lab = ifelse(roll_avg == 1, "≤1", 
+                              formatC(roll_avg, digits = 1, format = "f", big.mark = ","))
       ) %>% 
       arrange(date_vaccine_administered) %>% 
       dplyr::mutate(
@@ -1925,20 +1926,29 @@ server <- function(input, output, session) {
         mths_to_vaxx = as.numeric(days_to_vaxx) / 12
       ) %>% 
       mutate_if(is.numeric, round, 1) %>% 
-      select(province, pop, current_cum, roll_avg_lab, total_needed, date_to_vaxx) %>% 
+      mutate(
+        pop_lab = formatC(pop, digits = 0, format = "f", big.mark = ","),
+        current_cum_lab = formatC(current_cum, digits = 0, format = "f", big.mark = ","),
+        total_needed_lab = formatC(total_needed, digits = 0, format = "f", big.mark = ",")
+      ) %>% 
+      select(province, pop_lab, current_cum_lab, roll_avg_lab, total_needed_lab, date_to_vaxx) %>% 
       dplyr::rename(
         "Province" = province,
-        "Population" = pop,
-        "Total Doses Administered" = current_cum,
+        "Population" = pop_lab,
+        "Total Doses Administered" = current_cum_lab,
         "7-day Avg. Rate of Vaccination" = roll_avg_lab,
-        "Remaining Vaccinations Needed" = total_needed,
+        "Remaining Vaccinations Needed" = total_needed_lab,
         "Expected Date to Reach % Vaccination" = date_to_vaxx)
     
     table_time_to_pct_vaccination %>%
-      DT::datatable(class = "stripe compact hover", rownames = FALSE, extensions = "FixedColumns",
+      DT::datatable(class = "stripe compact hover", 
+                    rownames = FALSE, 
+                    extensions = "FixedColumns",
+                    escape = FALSE,
                     options = list(
+                      dom = "t",
                       paging = FALSE,
-                      scrollX = TRUE,
+                      scrollX = FALSE,
                       compact = TRUE,
                       autoWidth = TRUE,
                       ### centre all but the first column
@@ -1948,7 +1958,7 @@ server <- function(input, output, session) {
                     ))
     
   })
-  
+
   # travel tab
   
   ## load travel map
