@@ -1140,7 +1140,12 @@ server <- function(input, output, session) {
       group_by(!!sym(var_date)) %>%
       summarize(!!sym(var_val) := sum(!!sym(var_val)), .groups = "drop") %>%
       ### create labels for values
-      mutate(lab_val = formatC(!!(sym(var_val)), big.mark = ","))
+      mutate(lab_val = formatC(!!(sym(var_val)), big.mark = ","),
+             roll_avg = rollapply(!!sym(var_val), 7, mean, align = "right", partial = TRUE),
+             ### minimum value should be 1 (for log plot)
+             roll_avg = ifelse(roll_avg < 1, 1, roll_avg),
+             roll_avg_lab = ifelse(roll_avg == 1, "≤1", formatC(roll_avg, digits = 1, format = "f", big.mark = ","))
+      )
     
     ### plot data
     dat %>%
@@ -1153,17 +1158,21 @@ server <- function(input, output, session) {
                 case_when(
                   var_val == "avaccine" ~ paste0("Vaccine doses administered: ", dat[["lab_val"]]),
                   var_val == "dvaccine" ~ paste0("Vaccine doses distributed: ", dat[["lab_val"]]),
+                  var_val == "roll_avg" ~ paste0("7 day Average", dat[["lab_val"]]),
                   TRUE ~ paste0(capitalize(var_val), ": ", dat[["lab_val"]])
                 )
               )
       ) %>%
-      add_bars() %>%
+      add_bars(name = paste0("Daily ",capitalize(var_val))) %>%
       layout(
         xaxis = list(title = lab_x, fixedrange = TRUE),
         yaxis = list(title = lab_y, fixedrange = TRUE),
         legend = plotly_legend
-      ) %>%
-      config(displaylogo = FALSE,
+     ) %>% add_lines(x = as.formula(paste("~", var_date)),
+                     y = ~roll_avg, name = "7 day Average") %>%
+      layout(yaxis2 = list(overlaying = "y", side = "right")) %>%
+      layout(showlegend = TRUE
+    ) %>% rangeslider() %>% config(displaylogo = FALSE,
              modeBarButtonsToRemove = plotly_buttons)
   }
   
