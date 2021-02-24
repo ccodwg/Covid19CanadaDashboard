@@ -1150,29 +1150,21 @@ server <- function(input, output, session) {
     ### plot data
     dat %>%
       plot_ly(x = as.formula(paste("~", var_date)),
-              y = as.formula(paste("~", var_val)),
-              hoverinfo = "text",
-              hovertext = paste0(
-                "Province: ", input$prov, "\n",
-                "Date: ", dat[[var_date]], "\n",
-                case_when(
-                  var_val == "avaccine" ~ paste0("Vaccine doses administered: ", dat[["lab_val"]]),
-                  var_val == "dvaccine" ~ paste0("Vaccine doses distributed: ", dat[["lab_val"]]),
-                  var_val == "roll_avg" ~ paste0("7 day Average", dat[["lab_val"]]),
-                  TRUE ~ paste0(capitalize(var_val), ": ", dat[["lab_val"]])
-                )
-              )
+              y = as.formula(paste("~", var_val))
       ) %>%
-      add_bars(name = paste0("Daily ",capitalize(var_val))) %>%
+      add_bars(name = lab_y) %>%
       layout(
         xaxis = list(title = lab_x, fixedrange = TRUE),
         yaxis = list(title = lab_y, fixedrange = TRUE),
         legend = plotly_legend
-     ) %>% add_lines(x = as.formula(paste("~", var_date)),
-                     y = ~roll_avg, name = "7 day Average") %>%
+     ) %>%
+      add_lines(x = as.formula(paste("~", var_date)),
+                y = ~roll_avg, name = "7 day average") %>%
       layout(yaxis2 = list(overlaying = "y", side = "right")) %>%
-      layout(showlegend = TRUE
-    ) %>% rangeslider() %>% config(displaylogo = FALSE,
+      layout(showlegend = TRUE,
+             hovermode = "x unified"
+    ) %>%
+      config(displaylogo = FALSE,
              modeBarButtonsToRemove = plotly_buttons)
   }
   
