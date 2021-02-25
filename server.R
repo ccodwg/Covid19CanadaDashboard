@@ -1152,18 +1152,19 @@ server <- function(input, output, session) {
       plot_ly(x = as.formula(paste("~", var_date)),
               y = as.formula(paste("~", var_val))
       ) %>%
-      add_bars(name = lab_y) %>%
+      add_bars(name = "Daily") %>%
       layout(
         xaxis = list(title = lab_x, fixedrange = TRUE),
         yaxis = list(title = lab_y, fixedrange = TRUE),
         legend = plotly_legend
-     ) %>%
+      ) %>%
       add_lines(x = as.formula(paste("~", var_date)),
-                y = ~roll_avg, name = "7 day average") %>%
+                y = ~roll_avg, name = "7 day rolling average",
+                hovertemplate = "7 day Average") %>%
       layout(yaxis2 = list(overlaying = "y", side = "right")) %>%
       layout(showlegend = TRUE,
              hovermode = "x unified"
-    ) %>%
+      ) %>%
       config(displaylogo = FALSE,
              modeBarButtonsToRemove = plotly_buttons)
   }
@@ -1963,7 +1964,7 @@ server <- function(input, output, session) {
                     ))
     
   })
-
+  
   # travel tab
   
   ## load travel map
