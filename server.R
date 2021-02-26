@@ -1159,8 +1159,7 @@ server <- function(input, output, session) {
         legend = plotly_legend
       ) %>%
       add_lines(x = as.formula(paste("~", var_date)),
-                y = ~roll_avg, name = "7 day rolling average",
-                hovertemplate = "7 day Average") %>%
+                y = ~roll_avg, name = "7-day average") %>%
       layout(yaxis2 = list(overlaying = "y", side = "right")) %>%
       layout(showlegend = TRUE,
              hovermode = "x unified"
@@ -1218,31 +1217,31 @@ server <- function(input, output, session) {
   }
   
   ## daily numbers: cases
-  output$title_daily_cases <- renderText({title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Daily reported cases")})
+  output$title_daily_cases <- renderText({title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Daily Reported Cases & 7-day Rolling Average")})
   output$plot_daily_cases <- renderPlotly({
     plot_daily(data_ts_cases(), "date_report", "cases", "Report date", "Daily reported cases")
   })
   
   ## daily numbers: mortality
-  output$title_daily_mortality <- renderText({title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Daily reported deaths")})
+  output$title_daily_mortality <- renderText({title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Daily Reported Deaths & 7-day Rolling Average")})
   output$plot_daily_mortality <- renderPlotly({
     plot_daily(data_ts_mortality(), "date_death_report", "deaths", "Report date", "Daily reported deaths")
   })
   
   ## daily numbers: recovered
-  output$title_daily_recovered <- renderText({title_daily_cumulative(data_ts_recovered(), "date_report", "recovered", "Daily recovered")})
+  output$title_daily_recovered <- renderText({title_daily_cumulative(data_ts_recovered(), "date_report", "recovered", "Daily Recovered & 7-day Rolling Average")})
   output$plot_daily_recovered <- renderPlotly({
     plot_daily(data_ts_recovered(), "date_recovered", "recovered", "Date", "Daily recovered")
   })
   
   ## daily numbers: testing
-  output$title_daily_testing <- renderText({title_daily_cumulative(data_ts_testing(), "date_testing", "testing", "Daily testing")})
+  output$title_daily_testing <- renderText({title_daily_cumulative(data_ts_testing(), "date_testing", "testing", "Daily Testing & 7-day Rolling Average")})
   output$plot_daily_testing <- renderPlotly({
     plot_daily(data_ts_testing(), "date_testing", "testing", "Date", "Daily testing")
   })
   
   ## daily numbers: vaccine administration
-  output$title_daily_vaccine_administration <- renderText({title_daily_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Daily vaccine doses administered")})
+  output$title_daily_vaccine_administration <- renderText({title_daily_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Daily Vaccine Doses Administered & 7-day Rolling Average")})
   output$plot_daily_vaccine_administration <- renderPlotly({
     plot_daily(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Date", "Daily vaccine doses administered")
   })
