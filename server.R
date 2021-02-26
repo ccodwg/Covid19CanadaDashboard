@@ -1139,13 +1139,8 @@ server <- function(input, output, session) {
       select(!!sym(var_date), !!sym(var_val)) %>%
       group_by(!!sym(var_date)) %>%
       summarize(!!sym(var_val) := sum(!!sym(var_val)), .groups = "drop") %>%
-      ### create labels for values
-      mutate(lab_val = formatC(!!(sym(var_val)), big.mark = ","),
-             roll_avg = rollapply(!!sym(var_val), 7, mean, align = "right", partial = TRUE),
-             ### minimum value should be 1 (for log plot)
-             roll_avg = ifelse(roll_avg < 1, 1, roll_avg),
-             roll_avg_lab = ifelse(roll_avg == 1, "≤1", formatC(roll_avg, digits = 1, format = "f", big.mark = ","))
-      )
+      ### calculate rolling average
+      mutate(roll_avg = rollapply(!!sym(var_val), 7, mean, align = "right", partial = TRUE))
     
     ### plot data
     dat %>%
