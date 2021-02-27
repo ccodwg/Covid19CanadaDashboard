@@ -355,7 +355,7 @@ server <- function(input, output, session) {
     req(input$window_choropleth_overview_cases)
     
     ### render text
-    paste("Reported cases by province/territory in the last", input$window_choropleth_overview_cases, "days")
+    paste("Reported Cases by Province/Territory in the Last", input$window_choropleth_overview_cases, "Days")
   })
   
   # province case map for overview tab
@@ -399,13 +399,14 @@ server <- function(input, output, session) {
     labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
     labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
     labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
-    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
-    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
+    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 2
+    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"] + 1
     labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
     labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
     labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
     labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
     labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
+    labs[labs$province_short == "PE", "arrow_x"] <- labs[labs$province_short == "PE", "x"] + 3
     labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
     labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
     labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
@@ -417,8 +418,9 @@ server <- function(input, output, session) {
         type = "scatter",
         split = ~ province,
         color = ~ cases_colour,
+        opacity = 0.7,
         colors = "Reds",
-        stroke = I("#000000"),
+        stroke = I("#AAAAAA"),
         span = I(1.5),
         hoverinfo = "none"
       ) %>%
@@ -426,12 +428,12 @@ server <- function(input, output, session) {
         data = labs,
         x = ~ x,
         y = ~ y,
-        text = ~ lab_cases,
+        text = ~ paste0("<b>",lab_cases,"</b>"),
         hoverinfo = "text",
         hovertext = paste0(labs$province_short, ": ", labs$lab_cases),
-        font = list(color = "black", size = 14),
-        bgcolor = "white",
-        bordercolor = "black",
+        font = list(color = "#333333", size = 13),
+        bgcolor = NA,
+        bordercolor = NA,
         showarrow = ~ show_arrow,
         ax = ~ arrow_x,
         ay = ~ arrow_y,
@@ -441,7 +443,9 @@ server <- function(input, output, session) {
       layout(
         xaxis = axis_hide,
         yaxis = axis_hide,
-        showlegend = FALSE
+        showlegend = FALSE,
+        plot_bgcolor='transparent',
+        paper_bgcolor="transparent"
       ) %>%
       config(displaylogo = FALSE,
              ### hide all plotly buttons, since they do nothing here
@@ -461,8 +465,11 @@ server <- function(input, output, session) {
         h4(textOutput("title_choropleth_overview_cases")),
         plotlyOutput("plot_choropleth_overview_cases",
                      ### max width of plot = 600px
+                     ### max height of plot = max width - 100px
                      ### scale so plot doesn't overflow screen at small widths
-                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
+                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8)),
+                     height = ifelse(input$screen_width * (7/8) > 600, 500, input$screen_width * (7/8))
+                   ),
         width = 12,
         align = "center"
       )
@@ -499,7 +506,7 @@ server <- function(input, output, session) {
     req(input$window_choropleth_overview_vaccine_administration)
     
     ### render text
-    paste("Vaccine doses administered by province/territory in the last", input$window_choropleth_overview_vaccine_administration, "days")
+    paste("Vaccine Doses Administered by Province/Territory in the Last", input$window_choropleth_overview_vaccine_administration, "Days")
   })
   
   # province vaccine administration map for overview tab
@@ -543,14 +550,15 @@ server <- function(input, output, session) {
     labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
     labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
     labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
-    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
-    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
+    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 2
+    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"] + 1
     labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
     labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
     labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
     labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
     labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
-    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
+    labs[labs$province_short == "PE", "arrow_x"] <- labs[labs$province_short == "PE", "x"] + 3
+    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 7
     labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
     labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
     
@@ -561,8 +569,9 @@ server <- function(input, output, session) {
         type = "scatter",
         split = ~ province,
         color = ~ cases_colour,
-        colors = "Reds",
-        stroke = I("#000000"),
+        opacity = 0.7,
+        colors = "Blues",
+        stroke = I("#AAAAAA"),
         span = I(1.5),
         hoverinfo = "none"
       ) %>%
@@ -570,12 +579,12 @@ server <- function(input, output, session) {
         data = labs,
         x = ~ x,
         y = ~ y,
-        text = ~ lab_cases,
+        text = ~ paste0("<b>",lab_cases,"</b>"),
         hoverinfo = "text",
         hovertext = paste0(labs$province_short, ": ", labs$lab_cases),
-        font = list(color = "black", size = 14),
-        bgcolor = "white",
-        bordercolor = "black",
+        font = list(color = "#333333", size = 13),
+        bgcolor = NA,
+        bordercolor = NA,
         showarrow = ~ show_arrow,
         ax = ~ arrow_x,
         ay = ~ arrow_y,
@@ -585,7 +594,9 @@ server <- function(input, output, session) {
       layout(
         xaxis = axis_hide,
         yaxis = axis_hide,
-        showlegend = FALSE
+        showlegend = FALSE,
+        plot_bgcolor="transparent",
+        paper_bgcolor="transparent"
       ) %>%
       config(displaylogo = FALSE,
              ### hide all plotly buttons, since they do nothing here
@@ -605,8 +616,11 @@ server <- function(input, output, session) {
         h4(textOutput("title_choropleth_overview_vaccine_administration")),
         plotlyOutput("plot_choropleth_overview_vaccine_administration",
                      ### max width of plot = 600px
+                     ### max height of plot = max width - 100px
                      ### scale so plot doesn't overflow screen at small widths
-                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
+                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8)),
+                     height = ifelse(input$screen_width * (7/8) > 600, 500, input$screen_width * (7/8))
+                 ),
         width = 12,
         align = "center"
       )
@@ -1585,7 +1599,7 @@ server <- function(input, output, session) {
                 fillcolor = "rgba(0, 0, 0, 0.7)"
       ) %>%
       layout(
-        xaxis = list(title = "Date", fixedrange = TRUE, showgrid = FALSE),
+        xaxis = list(title = "Date", fixedrange = TRUE),
         yaxis = list(title = "Vaccine doses", fixedrange = TRUE),
         legend = plotly_legend,
         hovermode = "x unified"
@@ -1899,7 +1913,14 @@ server <- function(input, output, session) {
       ungroup() %>% 
       mutate(province = as.factor(province)) %>% 
       group_by(province) %>% 
-      dplyr::mutate(roll_avg = rollapply(avaccine, 7, mean, align = "right", partial = TRUE)) %>% 
+      dplyr::mutate(
+        # current_speed = mean(avaccine)
+        roll_avg = rollapply(avaccine, 7, mean, align = "right", partial = TRUE),
+        ### minimum value should be 1 (for log plot)
+        roll_avg = ifelse(roll_avg < 1, 1, roll_avg),
+        roll_avg_lab = ifelse(roll_avg == 1, "≤1", 
+                              formatC(roll_avg, digits = 1, format = "f", big.mark = ","))
+      ) %>% 
       arrange(date_vaccine_administered) %>% 
       dplyr::mutate(
         current_cum = last(cumulative_avaccine)
@@ -1916,7 +1937,6 @@ server <- function(input, output, session) {
       ) %>% 
       mutate_if(is.numeric, round, 1) %>% 
       mutate(
-        roll_avg_lab = formatC(roll_avg, digits = 1, format = "f", big.mark = ","),
         pop_lab = formatC(pop, digits = 0, format = "f", big.mark = ","),
         current_cum_lab = formatC(current_cum, digits = 0, format = "f", big.mark = ","),
         total_needed_lab = formatC(total_needed, digits = 0, format = "f", big.mark = ",")
@@ -1925,10 +1945,10 @@ server <- function(input, output, session) {
       dplyr::rename(
         "Province" = province,
         "Population" = pop_lab,
-        "Total doses administered" = current_cum_lab,
-        "7-day rolling average of doses administered" = roll_avg_lab,
-        "Remaining doses needed<sup> a</sup>" = total_needed_lab,
-        !!paste0("Expected date to reach ", input$pct_vaccination, "% fully vaccinated", "<sup> b</sup>") := date_to_vaxx)
+        "Total Doses Administered" = current_cum_lab,
+        "7-day Avg. Rate of Vaccination" = roll_avg_lab,
+        "Remaining Vaccinations Needed" = total_needed_lab,
+        !!paste0("Expected Date to Reach ", input$pct_vaccination, "% Fully Vaccinated") := date_to_vaxx)
     
     table_time_to_pct_vaccination %>%
       DT::datatable(class = "stripe compact hover", 
@@ -1937,9 +1957,8 @@ server <- function(input, output, session) {
                     escape = FALSE,
                     caption = tags$caption(
                       style = "caption-side: bottom; text-align: left; margin: 8px 0;",
-                      p(tags$sup("a "), paste0("Assuming ", input$pct_vaccination, "% of the population receives 2 vaccine doses.")),
-                      p(tags$sup("b "), "The expected date column is calculated based on the 7-day average rate of daily vaccine doses administered and assumes that every individual receives 2 doses. This calculation does not account for delays between doses.")
-                      ),
+                      "The expected date column is calculated based on the 7-day average rate of daily vaccine doses administered and assumes that every individual receives 2 doses. This calculation does not account for delays between doses."
+                    ),
                     options = list(
                       dom = "t",
                       paging = FALSE,
