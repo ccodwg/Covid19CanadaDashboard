@@ -1585,7 +1585,7 @@ server <- function(input, output, session) {
                 fillcolor = "rgba(0, 0, 0, 0.7)"
       ) %>%
       layout(
-        xaxis = list(title = "Date", fixedrange = TRUE),
+        xaxis = list(title = "Date", fixedrange = TRUE, showgrid = FALSE),
         yaxis = list(title = "Vaccine doses", fixedrange = TRUE),
         legend = plotly_legend,
         hovermode = "x unified"
@@ -1899,14 +1899,7 @@ server <- function(input, output, session) {
       ungroup() %>% 
       mutate(province = as.factor(province)) %>% 
       group_by(province) %>% 
-      dplyr::mutate(
-        # current_speed = mean(avaccine)
-        roll_avg = rollapply(avaccine, 7, mean, align = "right", partial = TRUE),
-        ### minimum value should be 1 (for log plot)
-        roll_avg = ifelse(roll_avg < 1, 1, roll_avg),
-        roll_avg_lab = ifelse(roll_avg == 1, "≤1", 
-                              formatC(roll_avg, digits = 1, format = "f", big.mark = ","))
-      ) %>% 
+      dplyr::mutate(roll_avg = rollapply(avaccine, 7, mean, align = "right", partial = TRUE)) %>% 
       arrange(date_vaccine_administered) %>% 
       dplyr::mutate(
         current_cum = last(cumulative_avaccine)
@@ -1923,6 +1916,7 @@ server <- function(input, output, session) {
       ) %>% 
       mutate_if(is.numeric, round, 1) %>% 
       mutate(
+        roll_avg_lab = formatC(roll_avg, digits = 1, format = "f", big.mark = ","),
         pop_lab = formatC(pop, digits = 0, format = "f", big.mark = ","),
         current_cum_lab = formatC(current_cum, digits = 0, format = "f", big.mark = ","),
         total_needed_lab = formatC(total_needed, digits = 0, format = "f", big.mark = ",")
@@ -1931,10 +1925,10 @@ server <- function(input, output, session) {
       dplyr::rename(
         "Province" = province,
         "Population" = pop_lab,
-        "Total Doses Administered" = current_cum_lab,
-        "7-day Avg. Rate of Vaccination" = roll_avg_lab,
-        "Remaining Vaccinations Needed" = total_needed_lab,
-        !!paste0("Expected Date to Reach ", input$pct_vaccination, "% Fully Vaccinated") := date_to_vaxx)
+        "Total doses administered" = current_cum_lab,
+        "7-day rolling average of doses administered" = roll_avg_lab,
+        "Remaining doses needed<sup> a</sup>" = total_needed_lab,
+        !!paste0("Expected date to reach ", input$pct_vaccination, "% fully vaccinated", "<sup> b</sup>") := date_to_vaxx)
     
     table_time_to_pct_vaccination %>%
       DT::datatable(class = "stripe compact hover", 
@@ -1943,8 +1937,9 @@ server <- function(input, output, session) {
                     escape = FALSE,
                     caption = tags$caption(
                       style = "caption-side: bottom; text-align: left; margin: 8px 0;",
-                      "The expected date column is calculated based on the 7-day average rate of daily vaccine doses administered and assumes that every individual receives 2 doses. This calculation does not account for delays between doses."
-                    ),
+                      p(tags$sup("a "), paste0("Assuming ", input$pct_vaccination, "% of the population receives 2 vaccine doses.")),
+                      p(tags$sup("b "), "The expected date column is calculated based on the 7-day average rate of daily vaccine doses administered and assumes that every individual receives 2 doses. This calculation does not account for delays between doses.")
+                      ),
                     options = list(
                       dom = "t",
                       paging = FALSE,

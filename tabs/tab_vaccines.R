@@ -87,15 +87,13 @@ tab_vaccines <- tabItem(tabName = "tab_vaccines",
                           tabsetPanel(
                             type = "tabs",
                             tabPanel(
-                              "Time to Percent Vaccination",
-                              fluidRow(
-                                DTOutput("table_prov_time_to_pct_vaccination")
-                                       ),
+                              "Time to percent fully vaccinated",
+                              HTML("<br>"), # a little whitespace
                               fluidRow(
                                 column(
                                   sliderInput(
                                     "pct_vaccination",
-                                    "Specify desired level of percent vaccination:",
+                                    "Specify desired level of % vaccination:",
                                     min = 30,
                                     max = 100,
                                     step = 1,
@@ -104,8 +102,11 @@ tab_vaccines <- tabItem(tabName = "tab_vaccines",
                                   width = 12,
                                   align = "center"
                                 )
-                              )
-                            ) 
+                              ),
+                              fluidRow(
+                                DTOutput("table_prov_time_to_pct_vaccination")
+                                       )
+                            )
                           )
                         )
 )
