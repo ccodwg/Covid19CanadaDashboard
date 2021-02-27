@@ -104,8 +104,8 @@ tab_vaccines <- tabItem(tabName = "tab_vaccines",
                                 )
                               ),
                               fluidRow(
-                                DTOutput("table_prov_time_to_pct_vaccination")
-                                       )
+                                div(style="overflow-x:auto", DTOutput("table_prov_time_to_pct_vaccination")) # scrollX=TRUE is buggy with when table is updated with slider
+                                )
                             )
                           )
                         )
