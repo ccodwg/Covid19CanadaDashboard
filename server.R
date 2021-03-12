@@ -76,6 +76,97 @@ server <- function(input, output, session) {
             "Saskatchewan" = "Saskatchewan",
             "Yukon" = "Yukon"
           )
+        ), conditionalPanel(
+          condition = "input.prov == 'Alberta'",
+          selectInput("hr","Health Region",
+                      choices = list("None","Calgary","Central","Edmonton","North","South"
+                      ),selectize = FALSE
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'BC'",
+          selectInput("hr","Health Region",
+                      choices = list("None","Fraser","Interior","Island","Northern","Vancouver Coastal"
+                      ),selectize = FALSE
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'Manitoba'",
+          selectInput("hr","Health Region",
+                      choices = list("None","Interlake-Eastern","Northern","Prairie Mountain","Southern Health","Winnipeg"
+                      ),selectize = FALSE
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'New Brunswick'",
+          selectInput("hr","Health Region",
+                      choices = list("None","Zone 1 (Moncton area)","Zone 2 (Saint John area)","Zone 3 (Fredericton area)",
+                                     "Zone 4 (Edmundston area)","Zone 5 (Campbellton area)","Zone 6 (Bathurst area)",
+                                     "Zone 7 (Miramichi area)"
+                      ),selectize = FALSE
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'NL'",
+          selectInput("hr","Health Region",
+                      choices = list("None","Central","Eastern","Labrador-Grenfell","Western"
+                      ),selectize = FALSE
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'Nova Scotia'",
+          selectInput("hr","Health Region",
+                      choices = list("None","Zone 1 - Western","Zone 2 - Northern","Zone 3 - Eastern","Zone 4 - Central"
+                      ),selectize = FALSE
+                      
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'Nunavut'",
+          selectInput("hr","Health Region",
+                      choices = list("None"
+                      ),selectize = FALSE
+                      
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'NWT'",
+          selectInput("hr","Health Region",
+                      choices = list("None"
+                      ),selectize = FALSE
+                      
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'Ontario'",
+          selectInput("hr","Health Region",
+                      choices = list("None","Algoma","Brant","Chatham-Kent","Durham","Eastern","Grey Bruce","Haldimand-Norfolk",
+                                     "Haliburton Kawartha Pineridge","Halton","Hamilton","Hastings Prince Edward","Huron Perth",
+                                     "Kingston Frontenac Lennox & Addington","Lambton","Leeds Grenville and Lanark","Middlesex-London",
+                                     "Niagara","North Bay Parry Sound","Northwestern","Ottawa","Peel","Peterborough","Porcupine",
+                                     "Renfrew","Simcoe Muskoka","Southwestern","Sudbury","Thunder Bay","Timiskaming","Toronto",
+                                     "Waterloo","Wellington Dufferin Guelph","Windsor-Essex","York"
+                      ),selectize = FALSE
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'PEI'",
+          selectInput("hr","Health Region",
+                      choices = list("None"
+                      ),selectize = FALSE
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'Quebec'",
+          selectInput("hr","Health Region",
+                      choices = list("None","Abitibi-Témiscamingue","Bas-Saint-Laurent","Capitale-Nationale","Chaudière-Appalaches",
+                                     "Côte-Nord","Estrie","Gaspésie-Îles-de-la-Madeleine","Lanaudière","Laurentides","Laval",
+                                     "Mauricie","Montérégie","Montréal","Nord-du-Québec","Nunavik","Outaouais","Saguenay","Terres-Cries-de-la-Baie-James"
+                      ),selectize = FALSE
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'Saskatchewan'",
+          selectInput("hr","Health Region",
+                      choices = list("None","Central","Far North","North","Regina","Saskatoon","South"
+                      ),selectize = FALSE
+                      
+          )
+        ), conditionalPanel(
+          condition = "input.prov == 'Yukon'",
+          selectInput("hr","Health Region",
+                      choices = list("None"
+                      ),selectize = FALSE
+          )
         ),
         dateRangeInput(
           "date_range",
@@ -89,6 +180,7 @@ server <- function(input, output, session) {
       )
     }
   })
+  
   
   # return plot instructing the user no cases match their filter settings
   plot_no_data <- function(completely_blank = FALSE) {
@@ -117,7 +209,27 @@ server <- function(input, output, session) {
   # reactive data
   
   ## function: get and filter data
-  get_data <- function(dataset, var_date, filter_province = ifelse(isTruthy(input[["prov"]]), input$prov, "Canada"), filter_date_lower = ifelse(isTruthy(input[["date_range"]]), input$date_range[1], date_min), filter_date_upper = ifelse(isTruthy(input[["date_range"]]), input$date_range[2], date_max), filter_province_ignore = FALSE, filter_date_ignore = FALSE) {
+  get_data_hr <- function(dataset, var_date,
+                       filter_province = ifelse(isTruthy(input[["prov"]]), input$prov, "Canada"),
+                       filter_hr = ifelse(isTruthy(input[["hr"]]),input$hr,"None"),
+                       filter_date_lower = ifelse(isTruthy(input[["date_range"]]), input$date_range[1], date_min),
+                       filter_date_upper = ifelse(isTruthy(input[["date_range"]]), input$date_range[2], date_max),
+                       filter_province_ignore = FALSE, filter_hr_ignore = FALSE, filter_date_ignore = FALSE) {
+    get(dataset) %>%
+      ### filter by province (if applicable)
+      {if (!filter_province_ignore & filter_province != "Canada") filter(., province == filter_province) else .} %>%
+      ### filter by HR (if applicable)
+      {if (!filter_hr_ignore & filter_hr != "None") filter(., health_region == filter_hr) else .} %>%
+      ### filter by date range (if applicable)
+      {if (!filter_date_ignore) filter(., !!sym(var_date) >= filter_date_lower & !!sym(var_date) <= filter_date_upper) else .}
+  }
+  
+  ## function: get and filter data
+  get_data <- function(dataset, var_date,
+                       filter_province = ifelse(isTruthy(input[["prov"]]), input$prov, "Canada"),
+                       filter_date_lower = ifelse(isTruthy(input[["date_range"]]), input$date_range[1], date_min),
+                       filter_date_upper = ifelse(isTruthy(input[["date_range"]]), input$date_range[2], date_max),
+                       filter_province_ignore = FALSE, filter_date_ignore = FALSE) {
     get(dataset) %>%
       ### filter by province (if applicable)
       {if (!filter_province_ignore & filter_province != "Canada") filter(., province == filter_province) else .} %>%
@@ -152,7 +264,7 @@ server <- function(input, output, session) {
     var_comp <- get_var_comp(var_val, comparison_window, comparison_scale)
     
     ### calculate comparisons
-    get_data(dataset, var_date, filter_province_ignore = TRUE, filter_date_ignore = TRUE) %>%
+    get_data(dataset, var_date, filter_province_ignore = TRUE,filter_hr_ignore = TRUE, filter_date_ignore = TRUE) %>%
       filter(province != "Repatriated") %>%
       select(province_short, pop, !!sym(var_val)) %>%
       rename(!!sym(var_comp) := !!sym(var_val)) %>%
@@ -211,12 +323,12 @@ server <- function(input, output, session) {
   
   ## case time series (health regions)
   data_ts_cases_hr <- reactive({
-    get_data("ts_cases_hr", "date_report")
+    get_data_hr("ts_cases_hr", "date_report")
   })
   
   ## mortality time series (health regions)
   data_ts_mortality_hr <- reactive({
-    get_data("ts_mortality_hr", "date_death_report")
+    get_data_hr("ts_mortality_hr", "date_death_report")
   })
   
   ## case time series (filter by date only for pie chart)
@@ -1094,10 +1206,10 @@ server <- function(input, output, session) {
   # daily/cumulative numbers plots
   
   ## function: daily/cumulative numbers plot title
-  title_daily_cumulative <- function(fun_data, var_date, var_val, lab_title, exclude_repatriated = FALSE, by_province = FALSE, filter_province = input$prov) {
+  title_daily_cumulative_hr <- function(fun_data, var_date, var_val, lab_title, exclude_repatriated = FALSE, by_province = FALSE, filter_province = input$prov, filter_hr = input$hr) {
     
     ### don't run without inputs defined
-    req(input$prov, input$date_range)
+    req(input$prov,input$hr, input$date_range)
     
     ### get data
     dat <- fun_data %>%
@@ -1113,7 +1225,39 @@ server <- function(input, output, session) {
     } else {
       if (filter_province == "Canada" & by_province) {
         paste0(lab_title, " in ", filter_province, " by province (n = ", format(n, big.mark = ","), ")")
-      } else {
+      } else if(filter_hr != "None") {
+        paste0(lab_title, " in ", filter_hr, " (n = ", format(n, big.mark = ","), ")")
+      }
+      else if(filter_hr == "None"){
+        paste0(lab_title, " in ", filter_hr, " (n = ", format(n, big.mark = ","), ")")
+      }
+    }
+  }
+  
+  ## function: daily/cumulative numbers plot title
+  title_daily_cumulative <- function(fun_data, var_date, var_val, lab_title, exclude_repatriated = FALSE, by_province = FALSE, filter_province = input$prov, filter_hr = input$hr) {
+    
+    ### don't run without inputs defined
+    req(input$prov,input$hr, input$date_range)
+    
+    ### get data
+    dat <- fun_data %>%
+      ### remove repatriated cases from count (if applicable)
+      {if (exclude_repatriated) filter(., province != "Repatriated") else .}
+    
+    ### calculate n
+    n <- sum(dat[, var_val])
+    
+    ### render title
+    if (n == 0) {
+      paste0(lab_title, " in ", filter_province)
+    } else {
+      if (filter_province == "Canada" & by_province) {
+        paste0(lab_title, " in ", filter_province, " by province (n = ", format(n, big.mark = ","), ")")
+      } else if(filter_hr != "None") {
+        paste0(lab_title, " in ", filter_province, " (n = ", format(n, big.mark = ","), ")")
+      }
+      else if(filter_hr == "None"){
         paste0(lab_title, " in ", filter_province, " (n = ", format(n, big.mark = ","), ")")
       }
     }
@@ -1123,7 +1267,7 @@ server <- function(input, output, session) {
   plot_daily <- function(fun_data, var_date, var_val, lab_x, lab_y) {
     
     ### don't run without inputs defined
-    req(input$prov, input$date_range)
+    req(input$prov, input$hr, input$date_range)
     
     ### get data
     dat <- fun_data
@@ -1164,10 +1308,10 @@ server <- function(input, output, session) {
   }
   
   ## function: cumulative numbers plot
-  plot_cumulative <- function(fun_data, var_date, var_val, lab_x, lab_y) {
+  plot_cumulative_hr <- function(fun_data, var_date, var_val, lab_x, lab_y) {
     
     ### don't run without inputs defined
-    req(input$prov, input$date_range)
+    req(input$prov,input$hr, input$date_range)
     
     ### get data
     dat <- fun_data
@@ -1183,6 +1327,14 @@ server <- function(input, output, session) {
       ### create labels for values
       mutate(lab_val = formatC(!!(sym(var_val)), big.mark = ","))
     
+    if(input$prov == "Canada"){
+      
+    ### transform data
+      dat <- dat %>%
+        filter(province != "Repatriated") %>%
+        ### create labels for values
+        mutate(lab_val = formatC(!!(sym(var_val)), big.mark = ","))
+      
     ### plot data
     dat %>%
       plot_ly(
@@ -1209,18 +1361,216 @@ server <- function(input, output, session) {
       ) %>%
       config(displaylogo = FALSE,
              modeBarButtonsToRemove = plotly_buttons)
+    } else if(input$prov != "Canada" & input$hr == "None"){
+      
+      ### transform data
+      dat <- dat %>%
+        filter(health_region != "Not Reported") %>%
+        ### create labels for values
+        mutate(lab_val = formatC(!!(sym(var_val)), big.mark = ","))
+      
+      ### plot data
+      dat %>%
+        plot_ly(
+          x = as.formula(paste("~", var_date)),
+          y = as.formula(paste("~", var_val)),
+          color = ~ health_region,
+          colors = palette_hr,
+          hoverinfo = "text",
+          hovertext = paste0(
+            "Health Region: ", dat[["health_region"]], "\n",
+            "Date: ", dat[[var_date]], "\n",
+            case_when(
+              var_val == "cumulative_avaccine" ~ paste0("Cumulative vaccine doses administered: ", dat[["lab_val"]]),
+              var_val == "cumulative_dvaccine" ~ paste0("Cumulative vaccine doses distributed: ", dat[["lab_val"]]),
+              TRUE ~ paste0(capitalize(sub("_", " ", var_val)), ": ", dat[["lab_val"]])
+            )
+          )
+        ) %>%
+        add_lines() %>%
+        layout(
+          xaxis = list(title = lab_x, fixedrange = TRUE),
+          yaxis = list(title = lab_y, fixedrange = TRUE),
+          legend = plotly_legend
+        ) %>%
+        config(displaylogo = FALSE,
+               modeBarButtonsToRemove = plotly_buttons)
+    } else if(input$prov != "None"){
+      ### plot data
+      dat %>%
+        plot_ly(
+          x = as.formula(paste("~", var_date)),
+          y = as.formula(paste("~", var_val)),
+          hoverinfo = "text",
+          hovertext = paste0(
+            "Health Region: ", dat[["health_region"]], "\n",
+            "Date: ", dat[[var_date]], "\n",
+            case_when(
+              var_val == "cumulative_avaccine" ~ paste0("Cumulative vaccine doses administered: ", dat[["lab_val"]]),
+              var_val == "cumulative_dvaccine" ~ paste0("Cumulative vaccine doses distributed: ", dat[["lab_val"]]),
+              TRUE ~ paste0(capitalize(sub("_", " ", var_val)), ": ", dat[["lab_val"]])
+            )
+          )
+        ) %>%
+        add_lines() %>%
+        layout(
+          xaxis = list(title = lab_x, fixedrange = TRUE),
+          yaxis = list(title = lab_y, fixedrange = TRUE),
+          legend = plotly_legend
+        ) %>%
+        config(displaylogo = FALSE,
+               modeBarButtonsToRemove = plotly_buttons)
+    }
+  }
+  
+  ## function: cumulative numbers plot
+  plot_cumulative <- function(fun_data, var_date, var_val, lab_x, lab_y) {
+    
+    ### don't run without inputs defined
+    req(input$prov,input$hr, input$date_range)
+    
+    ### get data
+    dat <- fun_data
+    
+    ### if no matching data, return blank plot
+    if (sum(dat[, var_val]) == 0) {
+      return(plot_no_data())
+    }
+    
+    ### transform data
+    
+    if(input$prov == "Canada"){
+      
+      ### transform data
+      dat <- dat %>%
+        filter(province != "Repatriated") %>%
+        ### create labels for values
+        mutate(lab_val = formatC(!!(sym(var_val)), big.mark = ","))
+      
+      ### plot data
+      dat %>%
+        plot_ly(
+          x = as.formula(paste("~", var_date)),
+          y = as.formula(paste("~", var_val)),
+          color = ~ province_short,
+          colors = palette_province_short,
+          hoverinfo = "text",
+          hovertext = paste0(
+            "Province: ", dat[["province_short"]], "\n",
+            "Date: ", dat[[var_date]], "\n",
+            case_when(
+              var_val == "cumulative_avaccine" ~ paste0("Cumulative vaccine doses administered: ", dat[["lab_val"]]),
+              var_val == "cumulative_dvaccine" ~ paste0("Cumulative vaccine doses distributed: ", dat[["lab_val"]]),
+              TRUE ~ paste0(capitalize(sub("_", " ", var_val)), ": ", dat[["lab_val"]])
+            )
+          )
+        ) %>%
+        add_lines() %>%
+        layout(
+          xaxis = list(title = lab_x, fixedrange = TRUE),
+          yaxis = list(title = lab_y, fixedrange = TRUE),
+          legend = plotly_legend
+        ) %>%
+        config(displaylogo = FALSE,
+               modeBarButtonsToRemove = plotly_buttons)
+    } else if(input$prov != "Canada" & input$hr == "None"){
+      
+      ### transform data
+      dat <- dat %>%
+        filter(province != "Repatriated") %>%
+        ### create labels for values
+        mutate(lab_val = formatC(!!(sym(var_val)), big.mark = ","))
+      
+      ### plot data
+      dat %>%
+        plot_ly(
+          x = as.formula(paste("~", var_date)),
+          y = as.formula(paste("~", var_val)),
+          color = ~ province_short,
+          colors = palette_province_short,
+          hoverinfo = "text",
+          hovertext = paste0(
+            "Province: ", dat[["province_short"]], "\n",
+            "Date: ", dat[[var_date]], "\n",
+            case_when(
+              var_val == "cumulative_avaccine" ~ paste0("Cumulative vaccine doses administered: ", dat[["lab_val"]]),
+              var_val == "cumulative_dvaccine" ~ paste0("Cumulative vaccine doses distributed: ", dat[["lab_val"]]),
+              TRUE ~ paste0(capitalize(sub("_", " ", var_val)), ": ", dat[["lab_val"]])
+            )
+          )
+        ) %>%
+        add_lines() %>%
+        layout(
+          xaxis = list(title = lab_x, fixedrange = TRUE),
+          yaxis = list(title = lab_y, fixedrange = TRUE),
+          legend = plotly_legend
+        ) %>%
+        config(displaylogo = FALSE,
+               modeBarButtonsToRemove = plotly_buttons)
+    } else if(input$prov != "None"){
+      ### plot data
+      dat %>%
+        plot_ly(
+          x = as.formula(paste("~", var_date)),
+          y = as.formula(paste("~", var_val)),
+          hoverinfo = "text",
+          hovertext = paste0(
+            "Province: ", dat[["province_short"]], "\n",
+            "Date: ", dat[[var_date]], "\n",
+            case_when(
+              var_val == "cumulative_avaccine" ~ paste0("Cumulative vaccine doses administered: ", dat[["lab_val"]]),
+              var_val == "cumulative_dvaccine" ~ paste0("Cumulative vaccine doses distributed: ", dat[["lab_val"]]),
+              TRUE ~ paste0(capitalize(sub("_", " ", var_val)), ": ", dat[["lab_val"]])
+            )
+          )
+        ) %>%
+        add_lines() %>%
+        layout(
+          xaxis = list(title = lab_x, fixedrange = TRUE),
+          yaxis = list(title = lab_y, fixedrange = TRUE),
+          legend = plotly_legend
+        ) %>%
+        config(displaylogo = FALSE,
+               modeBarButtonsToRemove = plotly_buttons)
+    }
   }
   
   ## daily numbers: cases
-  output$title_daily_cases <- renderText({title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Daily Reported Cases & 7-day Rolling Average")})
+  output$title_daily_cases <- renderText({
+    if((input$prov != "Canada" & input$hr == "None") | input$prov == "Canada"){
+      title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Daily Reported Cases & 7-day Rolling Average")
+    } else if(input$hr == "None"){
+      title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Daily Reported Cases & 7-day Rolling Average")
+    } else if(input$hr != "None"){
+      title_daily_cumulative_hr(data_ts_cases_hr(), "date_report", "cases", "Daily Reported Cases & 7-day Rolling Average")
+    }})
   output$plot_daily_cases <- renderPlotly({
-    plot_daily(data_ts_cases(), "date_report", "cases", "Report date", "Daily reported cases")
-  })
+    if((input$prov != "Canada" & input$hr == "None") | input$prov == "Canada"){
+      plot_daily(data_ts_cases(), "date_report", "cases", "Report date", "Daily reported cases")
+    } else if(input$hr == "None"){
+      plot_daily(data_ts_cases(), "date_report", "cases", "Report date", "Daily reported cases")
+    } else if(input$hr != "None"){
+      plot_daily(data_ts_cases_hr(), "date_report", "cases", "Report date", "Daily reported cases")
+    }
+    })
   
   ## daily numbers: mortality
-  output$title_daily_mortality <- renderText({title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Daily Reported Deaths & 7-day Rolling Average")})
+  output$title_daily_mortality <- renderText({
+    if(input$prov != "Canada" & input$hr == "None"){
+      title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Daily Reported Deaths & 7-day Rolling Average")
+    } else if(input$prov == "Canada"){
+      title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Daily Reported Deaths & 7-day Rolling Average")
+    } else if(input$hr != "None"){
+      title_daily_cumulative_hr(data_ts_mortality_hr(), "date_death_report", "deaths", "Daily Reported Deaths & 7-day Rolling Average")
+    }})
   output$plot_daily_mortality <- renderPlotly({
-    plot_daily(data_ts_mortality(), "date_death_report", "deaths", "Report date", "Daily reported deaths")
+    if(input$prov != "Canada" & input$hr == "None"){
+      plot_daily(data_ts_mortality(), "date_death_report", "deaths", "Report date", "Daily reported deaths")
+    } else if(input$prov == "Canada"){
+      plot_daily(data_ts_mortality(), "date_death_report", "deaths", "Report date", "Daily reported deaths")
+    } else if(input$hr != "None"){
+      plot_daily(data_ts_mortality_hr(), "date_death_report", "deaths", "Report date", "Daily reported deaths")
+    }
   })
   
   ## daily numbers: recovered
@@ -1242,17 +1592,46 @@ server <- function(input, output, session) {
   })
   
   ## cumulative numbers: cases
-  output$title_cumulative_cases <- renderText({title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Cumulative reported cases", exclude_repatriated = TRUE, by_province = TRUE)})
+  output$title_cumulative_cases <- renderText({
+    if((input$prov != "Canada" & input$hr == "None")){
+      title_daily_cumulative_hr(data_ts_cases_hr(), "date_report", "cases", "Cumulative Reported Cases", exclude_repatriated = TRUE, by_province = FALSE)
+    } else if(input$prov == "Canada"){
+      title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Cumulative Reported Cases", exclude_repatriated = TRUE, by_province = TRUE)
+    } else if(input$hr != "None"){
+      title_daily_cumulative_hr(data_ts_cases_hr(), "date_report", "cases", "Cumulative Reported Cases", exclude_repatriated = TRUE, by_province = FALSE)
+    }})
+
   output$plot_cumulative_cases <- renderPlotly({
-    plot_cumulative(data_ts_cases(), "date_report", "cumulative_cases", "Report date", "Cumulative reported cases")
+    if((input$prov != "Canada" & input$hr == "None")){
+      plot_cumulative_hr(data_ts_cases_hr(), "date_report", "cases", "Report date", "Daily reported cases")
+    } else if(input$prov == "Canada"){
+      plot_cumulative(data_ts_cases(), "date_report", "cases", "Report date", "Daily reported cases")
+    } else if(input$hr != "None"){
+      plot_cumulative_hr(data_ts_cases_hr(), "date_report", "cases", "Report date", "Daily reported cases")
+    }
   })
   
   ## cumulative numbers: mortality
-  output$title_cumulative_mortality <- renderText({title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Cumulative reported deaths", exclude_repatriated = TRUE, by_province = TRUE)})
+  output$title_cumulative_mortality <- renderText({
+    if((input$prov != "Canada" & input$hr == "None")){
+      title_daily_cumulative_hr(data_ts_mortality_hr(), "date_death_report", "deaths", "Cumulative Reported Deaths", exclude_repatriated = TRUE, by_province = FALSE)
+    } else if(input$prov == "Canada"){
+      title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Cumulative Reported Deaths", exclude_repatriated = TRUE, by_province = TRUE)
+    } else if(input$hr != "None"){
+      title_daily_cumulative_hr(data_ts_mortality_hr(), "date_death_report", "deaths", "Cumulative Reported Deaths", exclude_repatriated = TRUE, by_province = FALSE)
+    }})
+  
   output$plot_cumulative_mortality <- renderPlotly({
-    plot_cumulative(data_ts_mortality(), "date_death_report", "cumulative_deaths", "Date", "Cumulative reported deaths")
+    if((input$prov != "Canada" & input$hr == "None")){
+      plot_cumulative_hr(data_ts_mortality_hr(), "date_death_report", "cumulative_deaths","Date", "Cumulative reported deaths")
+    } else if(input$prov == "Canada"){
+      plot_cumulative(data_ts_mortality(), "date_death_report", "cumulative_deaths","Date", "Cumulative reported deaths")
+    } else if(input$hr != "None"){
+      plot_cumulative_hr(data_ts_mortality_hr(), "date_death_report", "cumulative_deaths","Date", "Cumulative reported deaths")
+    }
   })
   
+
   ## cumulative numbers: recovered
   output$title_cumulative_recovered <- renderText({title_daily_cumulative(data_ts_recovered(), "date_recovered", "recovered", "Cumulative recovered", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_recovered <- renderPlotly({
@@ -1266,6 +1645,7 @@ server <- function(input, output, session) {
   })
   
   ## cumulative numbers: vaccine administration
+
   output$title_cumulative_vaccine_administration <- renderText({title_daily_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Cumulative vaccine doses administered", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_vaccine_administration <- renderPlotly({
     plot_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "cumulative_avaccine", "Date", "Cumulative vaccine doses administered")
@@ -2187,5 +2567,5 @@ server <- function(input, output, session) {
       )
     }
   })
-  
+
 }
