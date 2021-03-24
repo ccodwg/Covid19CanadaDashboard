@@ -20,13 +20,13 @@ tab_cases <- tabItem(tabName = "tab_cases",
                                     "plot_type_cases",
                                     "Plot type",
                                     choices = c("Bar" = "bar-graph", "Line" = "time-series"),
-                                    selected = "bar-graph"
+                                    selected = "time-series"
                                   ),
                                   radioButtons(
                                     "scale_cases",
                                     "Absolute/per-capita",
                                     choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
-                                    selected = "per-capita"
+                                    selected = "absolute"
                                   )
                                 ))),
                        tabPanel("Pie chart",

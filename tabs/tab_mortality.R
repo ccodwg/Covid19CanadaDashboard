@@ -20,13 +20,13 @@ tab_mortality <- tabItem(tabName = "tab_mortality",
                                         "plot_type_deaths",
                                         "Plot type",
                                         choices = c("Bar" = "bar-graph", "Line" = "time-series"),
-                                        selected = "bar-graph"
+                                        selected = "time-series"
                                       ),
                                       radioButtons(
                                         "scale_deaths",
                                         "Absolute/per-capita",
                                         choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
-                                        selected = "per-capita"
+                                        selected = "absolute"
                                       )
                                     ))),
                            tabPanel("Pie chart",

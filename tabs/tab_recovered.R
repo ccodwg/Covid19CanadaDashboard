@@ -22,13 +22,13 @@ tab_recovered <- tabItem(tabName = "tab_recovered",
                                         "plot_type_recovered",
                                         "Plot type",
                                         choices = c("Bar" = "bar-graph", "Line" = "time-series"),
-                                        selected = "bar-graph"
+                                        selected = "time-series"
                                       ),
                                       radioButtons(
                                         "scale_recovered",
                                         "Absolute/per-capita",
                                         choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
-                                        selected = "per-capita"
+                                        selected = "absolute"
                                       )
                                     )),
                                     HTML("On July 17, Quebec <a href='https://opencovid.ca/work/data-faq/#6' target='_blank'> revised their definition of recovered</a>, causing a massive spike on that day. We are reviewing the feasibility of retroactively editing this time series.")

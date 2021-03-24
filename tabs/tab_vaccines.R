@@ -24,13 +24,13 @@ tab_vaccines <- tabItem(tabName = "tab_vaccines",
                                            "plot_type_avacc",
                                            "Plot type",
                                            choices = c("Bar" = "bar-graph", "Line" = "time-series"),
-                                           selected = "bar-graph"
+                                           selected = "time-series"
                                          ),
                                          radioButtons(
                                            "scale_comp_avacc",
                                            "Absolute/per-capita",
                                            choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
-                                           selected = "per-capita"
+                                           selected = "absolute"
                                          )
                                        )
                                      ),
@@ -49,13 +49,13 @@ tab_vaccines <- tabItem(tabName = "tab_vaccines",
                                            "plot_type_dvacc",
                                            "Plot type",
                                            choices = c("Bar" = "bar-graph", "Line" = "time-series"),
-                                           selected = "bar-graph"
+                                           selected = "time-series"
                                          ),
                                          radioButtons(
                                            "scale_comp_dvacc",
                                            "Absolute/per-capita",
                                            choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
-                                           selected = "per-capita"
+                                           selected = "absolute"
                                          )
                                        )
                                      ),

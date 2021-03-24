@@ -21,13 +21,13 @@ tab_testing <- tabItem(tabName = "tab_testing",
                                       "plot_type_testing",
                                       "Plot type",
                                       choices = c("Bar" = "bar-graph", "Line" = "time-series"),
-                                      selected = "bar-graph"
+                                      selected = "time-series"
                                     ),
                                     radioButtons(
                                       "scale_testing",
                                       "Absolute/per-capita",
                                       choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
-                                      selected = "per-capita"
+                                      selected = "absolute"
                                     )
                                   ))),
                          p("Provinces occasionally report negative cumulative testing numbers. We aim to reconcile these inconsistencies in future data updates, if possible."),
