@@ -57,9 +57,6 @@ ui <- dashboardPagePlus(
       menuItem("Testing",
                tabName = "tab_testing",
                icon = icon("vial")),
-      menuItem("Travel",
-               tabName = "tab_travel",
-               icon = icon("plane")),
       menuItem(
         "About the data",
         tabName = "tab_about",
@@ -134,7 +131,6 @@ ui <- dashboardPagePlus(
       tab_mortality,
       tab_recovered,
       tab_testing,
-      tab_travel,
       tab_about
     )
   ),
