@@ -32,5 +32,6 @@ tab_maps <- tabItem(tabName = "tab_maps",
                         leafletOutput("choropleth_hr", height = 700)
                       )),
                       p("Bins are based on quintiles."),
+                      includeHTML("text/sk_map.html"),
                       uiOutput("text_choropleth_hr")
                     ))
