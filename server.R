@@ -244,6 +244,11 @@ server <- function(input, output, session) {
     get_data_comp("ts_testing", "date_testing", "testing", comparison_window = input$window_comp_testing, comparison_scale = input$scale_comp_testing)
   })
   
+  ## comparisons data testing
+  data_comp_testing <- reactive({
+    get_data_comp("ts_testing", "date_testing", "testing", comparison_window = input$window_comp_testing, comparison_scale = input$scale_comp_testing)
+  })
+  
   # render info tables
   
   ## info: testing
@@ -843,9 +848,15 @@ server <- function(input, output, session) {
   output$title_comp_cases <- renderText({
     title_comp("reported cases", input$window_comp_cases, input$scale_comp_cases, date_max)
   })
+  
+  # output$plot_comp_cases <- renderPlotly({
+  #   plot_comp(data_comp_cases(), "cases", input$window_comp_cases, input$scale_comp_cases, "Daily reported cases")
+  # })
+  
   output$plot_comp_cases <- renderPlotly({
-    plot_comp(data_comp_cases(), "cases", input$window_comp_cases, input$scale_comp_cases, "Daily reported cases")
+    plot_cumulative_v2(fun_data = data_comp_cases(), var_val = "cases", input_window = input$window_comp_cases, input_scale = input$scale_comp_cases, lab_y = "Daily reported cases", input_plot = "comparisons")
   })
+  
   output$download_comp_cases <- downloadHandler(
     filename = "comp_prov_cases.csv",
     content = function(file) {
@@ -858,7 +869,8 @@ server <- function(input, output, session) {
     title_comp("reported deaths", input$window_comp_mortality, input$scale_comp_mortality, date_max)
   })
   output$plot_comp_mortality <- renderPlotly({
-    plot_comp(data_comp_mortality(), "deaths", input$window_comp_mortality, input$scale_comp_mortality, "Daily reported mortality")
+    plot_cumulative_v2(fun_data = data_comp_mortality(), var_val = "deaths", input_window = input$window_comp_mortality, input_scale = input$scale_comp_mortality, lab_y = "Daily reported mortality", input_plot = "comparisons")
+    # plot_comp(data_comp_mortality(), "deaths", input$window_comp_mortality, input$scale_comp_mortality, "Daily reported mortality")
   })
   output$download_comp_mortality <- downloadHandler(
     filename = "comp_prov_mortality.csv",
@@ -872,7 +884,8 @@ server <- function(input, output, session) {
     title_comp("testing", input$window_comp_testing, input$scale_comp_testing, date_max)
   })
   output$plot_comp_testing <- renderPlotly({
-    plot_comp(data_comp_testing(), "testing", input$window_comp_testing, input$scale_comp_testing, "Daily testing")
+    plot_cumulative_v2(fun_data = data_comp_testing(), var_val = "testing", input_window = input$window_comp_testing, input_scale = input$scale_comp_testing, lab_y = "Daily testing", input_plot = "comparisons")
+    # plot_comp(data_comp_testing(), "testing", input$window_comp_testing, input$scale_comp_testing, "Daily testing")
   })
   output$download_comp_testing <- downloadHandler(
     filename = "comp_prov_testing.csv",
@@ -1167,6 +1180,7 @@ server <- function(input, output, session) {
   plot_cumulative <- function(fun_data, var_date, var_val, lab_x, lab_y) {
     
     ### don't run without inputs defined
+    ## INPUT_SCALE
     req(input$prov, input$date_range)
     
     ### get data
@@ -1244,38 +1258,46 @@ server <- function(input, output, session) {
   ## cumulative numbers: cases
   output$title_cumulative_cases <- renderText({title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Cumulative reported cases", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_cases <- renderPlotly({
-    plot_cumulative(data_ts_cases(), "date_report", "cumulative_cases", "Report date", "Cumulative reported cases")
+    plot_cumulative_v2(data_ts_cases(), var_date = "date_report", var_val = "cumulative_cases", lab_x = "Report date", lab_y = "Cumulative reported cases", input_scale = input$scale_cases, input_plot = input$plot_type_cases)
+    # plot_cumulative(data_ts_cases(), "date_report", "cumulative_cases", "Report date", "Cumulative reported cases")
   })
   
   ## cumulative numbers: mortality
   output$title_cumulative_mortality <- renderText({title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Cumulative reported deaths", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_mortality <- renderPlotly({
-    plot_cumulative(data_ts_mortality(), "date_death_report", "cumulative_deaths", "Date", "Cumulative reported deaths")
+    plot_cumulative_v2(data_ts_mortality(), var_date = "date_death_report", var_val = "cumulative_deaths", lab_x = "Date", lab_y = "Cumulative reported deaths", input_scale = input$scale_deaths, input_plot = input$plot_type_deaths)
+    # plot_cumulative(data_ts_mortality(), "date_death_report", "cumulative_deaths", "Date", "Cumulative reported deaths")
   })
   
   ## cumulative numbers: recovered
   output$title_cumulative_recovered <- renderText({title_daily_cumulative(data_ts_recovered(), "date_recovered", "recovered", "Cumulative recovered", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_recovered <- renderPlotly({
-    plot_cumulative(data_ts_recovered(), "date_recovered", "cumulative_recovered", "Date", "Cumulative recovered")
+    plot_cumulative_v2(data_ts_recovered(), var_date = "date_recovered", var_val = "cumulative_recovered", lab_x = "Date", lab_y = "Cumulative recovered", input_scale = input$scale_recovered, input_plot = input$plot_type_recovered)
+    # plot_cumulative(data_ts_recovered(), "date_recovered", "cumulative_recovered", "Date", "Cumulative recovered")
   })
   
   ## cumulative numbers: testing
   output$title_cumulative_testing <- renderText({title_daily_cumulative(data_ts_testing(), "date_testing", "testing", "Cumulative testing", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_testing <- renderPlotly({
-    plot_cumulative(data_ts_testing(), "date_testing", "cumulative_testing", "Date", "Cumulative testing")
+    plot_cumulative_v2(data_ts_testing(), var_date = "date_testing", var_val = "cumulative_testing", lab_x = "Date", lab_y = "Cumulative testing", input_scale = input$scale_testing, input_plot = input$plot_type_testing)
+    # plot_cumulative(data_ts_testing(), "date_testing", "cumulative_testing", "Date", "Cumulative testing")
   })
   
   ## cumulative numbers: vaccine administration
-  output$title_cumulative_vaccine_administration <- renderText({title_daily_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Cumulative vaccine doses administered", exclude_repatriated = TRUE, by_province = TRUE)})
-  output$plot_cumulative_vaccine_administration <- renderPlotly({
-    plot_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "cumulative_avaccine", "Date", "Cumulative vaccine doses administered")
-  })
+  ## NOTE: This plot was replaced by the plot_cumulative_v2 function; will remove once finalized
+  # output$title_cumulative_vaccine_administration <- renderText({title_daily_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Cumulative vaccine doses administered", exclude_repatriated = TRUE, by_province = TRUE)})
+  # output$plot_cumulative_vaccine_administration <- renderPlotly({
+  #   plot_cumulative_v2(data_ts_vaccine_administration(), var_date = "date_vaccine_administered", var_val = "cumulative_avaccine", lab_x = "Date", lab_y = "Cumulative vaccine doses administered", input_scale = "per-capita", input_plot = "time-series")
+  #   # plot_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "cumulative_avaccine", "Date", "Cumulative vaccine doses administered")
+  # })
   
   ## cumulative numbers: vaccine distribution
-  output$title_cumulative_vaccine_distribution <- renderText({title_daily_cumulative(data_ts_vaccine_distribution(), "date_vaccine_distributed", "dvaccine", "Cumulative vaccine doses distributed", exclude_repatriated = TRUE, by_province = TRUE)})
-  output$plot_cumulative_vaccine_distribution <- renderPlotly({
-    plot_cumulative(data_ts_vaccine_distribution(), "date_vaccine_distributed", "cumulative_dvaccine", "Date", "Cumulative vaccine doses distributed")
-  })
+  ## NOTE: This plot was replaced by the plot_cumulative_v2 function; will remove once finalized
+  # output$title_cumulative_vaccine_distribution <- renderText({title_daily_cumulative(data_ts_vaccine_distribution(), "date_vaccine_distributed", "dvaccine", "Cumulative vaccine doses distributed", exclude_repatriated = TRUE, by_province = TRUE)})
+  # output$plot_cumulative_vaccine_distribution <- renderPlotly({
+  #   plot_cumulative_v2(data_ts_vaccine_distribution(), var_date = "date_vaccine_distributed", var_val = "cumulative_dvaccine", lab_x = "Date", lab_y = "Cumulative vaccine doses distributed", input_scale = "per-capita", input_plot = "time-series")
+  #   # plot_cumulative(data_ts_vaccine_distribution(), "date_vaccine_distributed", "cumulative_dvaccine", "Date", "Cumulative vaccine doses distributed")
+  # })
   
   # pie charts
   
@@ -1681,41 +1703,181 @@ server <- function(input, output, session) {
     
   })
   
+  ## plot_cumulative_v2 function
+  
+  plot_cumulative_v2 <- function(fun_data, var_date, var_val, 
+                                 input_scale, input_window, input_plot, 
+                                 lab_x, lab_y) {
+    
+    ### This function pulls together the functions needed to run vaccine graphs, cumulative graphs, and bar graphs (and generates the absolute vs. per-capita plots to be toggled by radio button)
+    
+    ### get data
+    dat <- fun_data
+    
+    # input_plot accepts input$plot_type
+    if (input_plot == "bar-graph") {
+      
+      dat <- get_var_vaccine(fun_data, var_date, var_val, comparison_scale = input_scale)
+      
+      lab_y_var <- paste0("lab_", var_val)
+      
+      if (input_scale == "per-capita") {
+        
+        lab_y <- case_when(
+          var_val == "cumulative_avaccine" ~ "Vaccine doses administered per 100,000",
+          var_val == "cumulative_dvaccine" ~ "Vaccine doses distributed per 100,000",
+          TRUE ~ ""
+        )
+        y_var <- paste0(var_val, "_per_capita")
+        
+      } else {
+        lab_y <- case_when(
+          var_val == "cumulative_avaccine" ~ "Total vaccine doses administered",
+          var_val == "cumulative_dvaccine" ~ "Total vaccine doses distributed",
+          TRUE ~ ""
+        )
+        y_var <- var_val
+      }
+      
+      ### plot data
+      dat %>%
+        plot_ly() %>%
+        add_trace(
+          x = ~ province_short,
+          y = as.formula(paste("~", y_var)),
+          type = "bar",
+          color = ~ province_short,
+          colors = palette_province_short,
+          hoverinfo = "text",
+          hovertext = paste0(
+            dat$province_short, ": ", dat[[lab_y_var]]
+          )
+        ) %>% 
+        layout(
+          xaxis = list(title = "Province", fixedrange = TRUE),
+          yaxis = list(title = lab_y, fixedrange = TRUE),
+          showlegend = FALSE
+        ) %>%
+        config(displaylogo = FALSE,
+               modeBarButtonsToRemove = plotly_buttons)
+      
+    } else if (input_plot == "time-series") {
+      
+      if (input_scale == "per-capita") {
+        
+        dat <- dat %>% 
+          group_by(province_short) %>% 
+          mutate(!!sym(var_val) := !!sym(var_val) / pop * 100000) %>% 
+          ungroup()
+        
+        lab_y <- case_when(
+          var_val == "cumulative_avaccine" ~ "Cumulative vaccine doses administered: ",
+          var_val == "cumulative_dvaccine" ~ "Cumulative vaccine doses distributed: ",
+          TRUE ~ paste0(capitalize(sub("_", " ", var_val)), ": ")
+        )
+        
+      } else {
+        
+        lab_y <- case_when(
+          var_val == "cumulative_avaccine" ~ "Cumulative vaccine doses administered: ",
+          var_val == "cumulative_dvaccine" ~ "Cumulative vaccine doses distributed: ",
+          TRUE ~ paste0(capitalize(sub("_", " ", var_val)), ": ")
+        )
+        
+      }
+      
+      ### transform data
+      dat <- dat %>%
+        filter(province != "Repatriated") %>%
+        ### create labels for values
+        mutate(lab_val = formatC(!!(sym(var_val)), big.mark = ","))
+      
+      ### plot data
+      dat %>%
+        plot_ly(
+          x = as.formula(paste("~", var_date)),
+          y = as.formula(paste("~", var_val)),
+          color = ~ province_short,
+          colors = palette_province_short,
+          hoverinfo = "text",
+          hovertext = paste0(
+            "Province: ", dat[["province_short"]], "\n",
+            "Date: ", dat[[var_date]], "\n",
+            paste0(lab_y, dat[["lab_val"]])
+          )
+        ) %>%
+        add_lines() %>%
+        layout(
+          xaxis = list(title = lab_x, fixedrange = TRUE),
+          yaxis = list(title = lab_y, fixedrange = TRUE),
+          legend = plotly_legend
+        ) %>%
+        config(displaylogo = FALSE,
+               modeBarButtonsToRemove = plotly_buttons)
+      
+    } else if (input_plot == "comparisons") {
+      
+      # Run plot_comp
+      plot_comp(fun_data, var_val, input_window, input_scale, lab_y)
+      
+    } else {
+      
+      ### if no matching data, return blank plot
+      if (sum(dat[, var_val]) == 0) {
+        return(plot_no_data())
+      }
+      
+    }
+    
+  }
+  
   ## doses administered by province (absolute/per-capita) data
   
-  data_avaccine_per_capita <- reactive({
+  get_var_vaccine <- function(fun_data, var_date, var_val, comparison_scale) {
     
-    ### don't run without inputs defined
-    req(input$prov, input$date_range, input$scale_comp_avacc)
-    
+    dat <- fun_data
     
     ### convert to per-capita (if applicable)
-    if (input$scale_comp_avacc == "per-capita") {
-      data_ts_vaccine_administration() %>% 
+    if (comparison_scale == "per-capita") {
+      
+      var_comp <- paste0(var_val, "_per_capita")
+      lab_var_comp <- paste0("lab_", var_val)
+      
+      dat %>% 
         # left_join(map_prov %>% select(province, pop), by = c("province")) %>% 
         group_by(province) %>% 
         ### convert to per-capita (if applicable)
-        filter(date_vaccine_administered == max(date_vaccine_administered)) %>% 
+        filter(!!sym(var_date) == max(!!sym(var_date))) %>% 
         ungroup() %>% 
-        dplyr::mutate(avaccine_per_capita = cumulative_avaccine / pop * 100000) %>%
+        dplyr::mutate(!!sym(var_comp) := !!sym(var_val) / pop * 100000) %>%
         ### create labels for values
-        dplyr::mutate(lab_avaccine_per_capita = formatC(avaccine_per_capita, digits = 2, format = "f", big.mark = ",")) 
+        dplyr::mutate(!!sym(lab_var_comp) := formatC(!!sym(var_comp), digits = 2, format = "f", big.mark = ",")) 
       ### merge short names
       # left_join(map_prov %>% select(province, province_short), by = c("province"))
       
     } else {
-      data_ts_vaccine_administration() %>% 
+      
+      var_comp <- var_val
+      lab_var_comp <- paste0("lab_", var_val)
+      
+      dat %>% 
         group_by(province) %>% 
         ### convert to per-capita (if applicable)
-        filter(date_vaccine_administered == max(date_vaccine_administered)) %>% 
+        filter(!!sym(var_date) == max(!!sym(var_date))) %>% 
         summarize(pop = max(pop), 
-                  avaccine_per_capita := mean(cumulative_avaccine), .groups = "drop") %>% 
+                  !!sym(var_comp) := mean(!!sym(var_val)), .groups = "drop") %>% 
         ### create labels for values
-        dplyr::mutate(lab_avaccine_per_capita = formatC(avaccine_per_capita, digits = 2, format = "f", big.mark = ",")) %>% 
+        dplyr::mutate(!!sym(lab_var_comp) := formatC(!!sym(var_comp), digits = 2, format = "f", big.mark = ",")) %>% 
         ### merge short names
         left_join(map_prov %>% select(province, province_short), by = c("province"))
+      
     }
     
+  }
+  
+  
+  data_avaccine_per_capita <- reactive({
+    get_var_vaccine(data_ts_vaccine_administration(), "date_vaccine_administered", "cumulative_avaccine", comparison_scale = input$scale_comp_avacc)
   })
   
   ## doses administered by province (absolute/per-capita) title
@@ -1745,77 +1907,21 @@ server <- function(input, output, session) {
   
   output$plot_avaccine_per_capita <- renderPlotly({
     
-    ### don't run without inputs defined
-    req(input$prov, input$date_range, input$scale_comp_avacc)
-    
-    ### get merged vaccine data
-    dat <- data_avaccine_per_capita()
-    
-    ### add per-capita to y-axis label (if applicable)
-    # input$scale_comp_avacc == "per-capita"
-    if (input$scale_comp_avacc == "per-capita") {
-      lab_y <- "Vaccine doses administered per 100,000"
-    } else {
-      lab_y <- "Total vaccine doses administered"
-    }
-    
-    ### plot data
-    dat %>%
-      plot_ly() %>%
-      add_trace(
-        x = ~ province_short,
-        y = ~ avaccine_per_capita,
-        type = "bar",
-        color = ~ province_short,
-        colors = palette_province_short,
-        hoverinfo = "text",
-        hovertext = paste0(
-          dat$province_short, ": ", dat$lab_avaccine_per_capita
-        )
-      ) %>% 
-      layout(
-        xaxis = list(title = "Province", fixedrange = TRUE),
-        yaxis = list(title = lab_y, fixedrange = TRUE),
-        showlegend = FALSE
-      ) %>%
-      config(displaylogo = FALSE,
-             modeBarButtonsToRemove = plotly_buttons)
-    
+    plot_cumulative_v2(
+      data_ts_vaccine_administration(),
+      var_val = "cumulative_avaccine", 
+      var_date = "date_vaccine_administered",
+      input_scale = input$scale_comp_avacc, 
+      input_plot = input$plot_type_avacc, 
+      lab_x = "Province"
+    )
+
   })
   
   ## doses distributed by province (absolute/per-capita) data
   
   data_dvaccine_per_capita <- reactive({
-    
-    ### don't run without inputs defined
-    req(input$prov, input$date_range, input$scale_comp_dvacc)
-    
-    
-    ### convert to per-capita (if applicable)
-    if (input$scale_comp_dvacc == "per-capita") {
-      data_ts_vaccine_distribution() %>% 
-        # left_join(map_prov %>% select(province, pop), by = c("province")) %>% 
-        group_by(province) %>% 
-        ### convert to per-capita (if applicable)
-        filter(date_vaccine_distributed == max(date_vaccine_distributed)) %>% 
-        ungroup() %>% 
-        dplyr::mutate(dvaccine_per_capita = cumulative_dvaccine / pop * 100000) %>%
-        ### create labels for values
-        dplyr::mutate(lab_dvaccine_per_capita = formatC(dvaccine_per_capita, digits = 2, format = "f", big.mark = ","))
-      
-    } else {
-      data_ts_vaccine_distribution() %>% 
-        group_by(province) %>% 
-        ### convert to per-capita (if applicable)
-        filter(date_vaccine_distributed == max(date_vaccine_distributed)) %>%
-        summarize(pop = max(pop), 
-                  dvaccine_per_capita := mean(cumulative_dvaccine), .groups = "drop") %>% 
-        ### create labels for values
-        dplyr::mutate(lab_dvaccine_per_capita = formatC(dvaccine_per_capita, digits = 2, format = "f", big.mark = ",")) %>% 
-        ### merge short names
-        left_join(map_prov %>% select(province, province_short), by = c("province"))
-    }
-    
+    get_var_vaccine(data_ts_vaccine_distribution(), "date_vaccine_distributed", "cumulative_dvaccine", input$scale_comp_dvacc)
   })
   
   ## doses distributed by province (absolute/per-capita) title
@@ -1845,40 +1951,14 @@ server <- function(input, output, session) {
   
   output$plot_dvaccine_per_capita <- renderPlotly({
     
-    ### don't run without inputs defined
-    req(input$prov, input$date_range, input$scale_comp_dvacc)
-    
-    ### get merged vaccine data
-    dat <- data_dvaccine_per_capita()
-    
-    ### add per-capita to y-axis label (if applicable)
-    if (input$scale_comp_dvacc == "per-capita") {
-      lab_y <- "Vaccine doses distributed per 100,000"
-    } else {
-      lab_y <- "Total vaccine doses distributed"
-    }
-    
-    ### plot data
-    dat %>%
-      plot_ly() %>%
-      add_trace(
-        x = ~ province_short,
-        y = ~ dvaccine_per_capita,
-        type = "bar",
-        color = ~ province_short,
-        colors = palette_province_short,
-        hoverinfo = "text",
-        hovertext = paste0(
-          dat$province_short, ": ", dat$lab_dvaccine_per_capita
-        )
-      ) %>% 
-      layout(
-        xaxis = list(title = "Province", fixedrange = TRUE),
-        yaxis = list(title = lab_y, fixedrange = TRUE),
-        showlegend = FALSE
-      ) %>%
-      config(displaylogo = FALSE,
-             modeBarButtonsToRemove = plotly_buttons)
+    plot_cumulative_v2(
+      data_ts_vaccine_distribution(),
+      var_val = "cumulative_dvaccine", 
+      var_date = "date_vaccine_distributed",
+      input_scale = input$scale_comp_dvacc, 
+      input_plot = input$plot_type_dvacc, 
+      lab_x = "Province"
+    )
     
   })
   
@@ -1939,7 +2019,7 @@ server <- function(input, output, session) {
                       style = "caption-side: bottom; text-align: left; margin: 8px 0;",
                       p(tags$sup("a "), paste0("Assuming ", input$pct_vaccination, "% of the population receives 2 vaccine doses.")),
                       p(tags$sup("b "), "The expected date column is calculated based on the 7-day average rate of daily vaccine doses administered and assumes that every individual receives 2 doses. This calculation does not account for delays between doses.")
-                      ),
+                    ),
                     options = list(
                       dom = "t",
                       paging = FALSE,
