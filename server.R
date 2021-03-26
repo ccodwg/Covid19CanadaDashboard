@@ -734,70 +734,53 @@ server <- function(input, output, session) {
   }
   
   ## function: flattening plot
-  plot_flattening <- function(fun_data, var_date, var_val, var_val_cum, min_val_cum, filter_val_min, lab_y, val_scale = input$scale_flattening) {
+  plot_flattening <- function(fun_data, var_date, var_val, lab_y, val_scale = input$scale_flattening) {
     
     ### don't run without inputs defined
-    req(input$scale_flattening, input$min_flattening_cases, input$min_flattening_mortality)
+    req(input$scale_flattening)
     
     ### get data
     dat <- fun_data
     
     ### process data
     dat <- dat %>%
-      filter(province != "Repatriated") %>%
-      ### calculate first day with filter_val_min cumulative cases or deaths
-      group_by(province_short) %>%
-      inner_join(
-        dat %>%
-          group_by(province_short) %>%
-          filter(!!sym(var_val_cum) >= min_val_cum) %>%
-          slice_head(n = 1) %>%
-          rename(date_start = !!sym(var_date)) %>%
-          select(province_short, date_start),
-        by = "province_short"
-      ) %>%
-      filter(!!sym(var_date) >= date_start) %>%
-      mutate(
-        days_since_start = !!sym(var_date) - date_start,
-        roll_avg = rollapply(!!sym(var_val), 7, mean, align = "right", partial = TRUE),
-        ### minimum value should be 1 (for log plot)
-        roll_avg = ifelse(roll_avg < 1, 1, roll_avg),
-        roll_avg_lab = ifelse(roll_avg == 1, "≤1", formatC(roll_avg, digits = 1, format = "f", big.mark = ","))
-      )
+      filter(province != "Repatriated")
     
-    ### generate x-axis label from inputs
-    lab_x <- paste("Days since", min_val_cum, sub("_", " ", var_val_cum))
+    ### calculate 7-day rolling average
+    dat <- dat %>%
+      group_by(province) %>%
+      mutate(roll_avg = rollapply(!!sym(var_val), 7, mean, align = "right", partial = TRUE)) %>%
+      ungroup
     
     ### plot data
     dat %>%
       plot_ly(
-        x = ~ days_since_start,
-        y = ~ roll_avg,
+        x = as.formula(paste("~", var_date)),
+        y = ~roll_avg,
         color = ~ province_short,
-        colors = palette_province_short,
-        hoverinfo = "text",
-        hovertext = paste0(
-          "Province: ", dat[["province_short"]], "\n",
-          "Date: ", dat[[var_date]], "\n",
-          "Avg. daily ", var_val, ": ", dat[["roll_avg_lab"]])
+        colors = palette_province_short
       ) %>%
       add_lines() %>%
       layout(
-        xaxis = list(title = lab_x, fixedrange = TRUE),
+        xaxis = list(title = "Report date", fixedrange = TRUE),
         yaxis = {if (val_scale == "logarithmic") list(type = "log", title = lab_y, fixedrange = TRUE) else list(title = lab_y, fixedrange = TRUE)},
-        legend = plotly_legend
+        legend = plotly_legend,
+        showlegend = TRUE,
+        hovermode = "x unified"
       ) %>%
-      config(displaylogo = FALSE,
-             modeBarButtonsToRemove = plotly_buttons)
+      config(
+        displaylogo = FALSE,
+        modeBarButtonsToRemove = plotly_buttons
+        )
   }
   
   ## cases
   output$title_flattening_cases <- renderText({title_flattening("Daily reported cases by province")})
-  output$plot_flattening_cases <- renderPlotly({plot_flattening(data_ts_cases(), "date_report", "cases", "cumulative_cases", input$min_flattening_cases, 30, "Daily reported cases")})
+  output$plot_flattening_cases <- renderPlotly({plot_flattening(data_ts_cases(), "date_report", "cases", "Daily reported cases")})
   
   ## mortality
   output$title_flattening_mortality <- renderText({title_flattening("Daily reported deaths by province")})
-  output$plot_flattening_mortality <- renderPlotly({plot_flattening(data_ts_mortality(), "date_death_report", "deaths", "cumulative_deaths", input$min_flattening_mortality, 10, "Daily reported deaths")})
+  output$plot_flattening_mortality <- renderPlotly({plot_flattening(data_ts_mortality(), "date_death_report", "deaths", "Daily reported deaths")})
   
   # comparisons
   
