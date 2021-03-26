@@ -1327,31 +1327,31 @@ server <- function(input, output, session) {
   }
   
   ## daily numbers: cases
-  output$title_daily_cases <- renderText({title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Daily Reported Cases & 7-day Rolling Average")})
+  output$title_daily_cases <- renderText({title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Daily reported cases & 7-day rolling average")})
   output$plot_daily_cases <- renderPlotly({
     plot_daily(data_ts_cases(), "date_report", "cases", "Report date", "Daily reported cases")
   })
   
   ## daily numbers: mortality
-  output$title_daily_mortality <- renderText({title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Daily Reported Deaths & 7-day Rolling Average")})
+  output$title_daily_mortality <- renderText({title_daily_cumulative(data_ts_mortality(), "date_death_report", "deaths", "Daily reported deaths & 7-day rolling average")})
   output$plot_daily_mortality <- renderPlotly({
     plot_daily(data_ts_mortality(), "date_death_report", "deaths", "Report date", "Daily reported deaths")
   })
   
   ## daily numbers: recovered
-  output$title_daily_recovered <- renderText({title_daily_cumulative(data_ts_recovered(), "date_report", "recovered", "Daily Recovered & 7-day Rolling Average")})
+  output$title_daily_recovered <- renderText({title_daily_cumulative(data_ts_recovered(), "date_report", "recovered", "Daily recovered & 7-day rolling average")})
   output$plot_daily_recovered <- renderPlotly({
     plot_daily(data_ts_recovered(), "date_recovered", "recovered", "Date", "Daily recovered")
   })
   
   ## daily numbers: testing
-  output$title_daily_testing <- renderText({title_daily_cumulative(data_ts_testing(), "date_testing", "testing", "Daily Testing & 7-day Rolling Average")})
+  output$title_daily_testing <- renderText({title_daily_cumulative(data_ts_testing(), "date_testing", "testing", "Daily testing & 7-day rolling average")})
   output$plot_daily_testing <- renderPlotly({
     plot_daily(data_ts_testing(), "date_testing", "testing", "Date", "Daily testing")
   })
   
   ## daily numbers: vaccine administration
-  output$title_daily_vaccine_administration <- renderText({title_daily_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Daily Vaccine Doses Administered & 7-day Rolling Average")})
+  output$title_daily_vaccine_administration <- renderText({title_daily_cumulative(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Daily vaccine doses administered & 7-day rolling average")})
   output$plot_daily_vaccine_administration <- renderPlotly({
     plot_daily(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Date", "Daily vaccine doses administered")
   })
@@ -1810,9 +1810,6 @@ server <- function(input, output, session) {
     ### don't run without inputs defined
     req(input$prov, input$date_range)
     
-    # title_daily_cumulative <- function(fun_data, var_date, var_val, lab_title, exclude_repatriated = FALSE, by_province = FALSE, filter_province = input$prov)
-    # title_daily_cumulative(data_ts_cases(), "date_report", "cases", "Daily Reported Cases & 7-day Rolling Average")
-    
     ### get data
     dat <- fun_data %>%
       ### remove repatriated cases from count (if applicable)
@@ -1832,9 +1829,6 @@ server <- function(input, output, session) {
       
     } else if (input_plot == "bar-graph") {
       
-      # SCENARIO 3: Reported cases in Canada by province (n = 790,740)
-      # SCENARIO 4: Average reported cases per 100,000 in Canada by province (n = 790,740)
-      
       if (input_scale == "per-capita") {
         lab_title <- paste0("Average ", tolower(lab_title))
       }
@@ -1847,8 +1841,6 @@ server <- function(input, output, session) {
 
     } else if (input_plot == "time-series") {
       
-      # SCENARIO 1: Cumulative reported cases in Canada by province (n = 790,740)
-      # SCENARIO 2: Cumulative reported cases per 100,000 in Canada by province (n = 790,740)
       if (filter_province == "Canada" & by_province) {
         paste0("Cumulative ", tolower(lab_title), " in ", filter_province, " by province (n = ", format(n, big.mark = ","), ")")
       } else {
@@ -1864,8 +1856,6 @@ server <- function(input, output, session) {
   plot_cumulative_v2 <- function(fun_data, var_date, var_val, 
                                  input_scale, input_window, input_plot, 
                                  lab_x, lab_y) {
-    
-    ### This function pulls together the functions needed to run vaccine graphs, cumulative graphs, and bar graphs (and generates the absolute vs. per-capita plots to be toggled by radio button)
     
     ### get data
     dat <- fun_data
