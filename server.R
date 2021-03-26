@@ -1,4 +1,3 @@
-# server
 server <- function(input, output, session) {
   
   # pop-up alert upon app start
@@ -217,6 +216,26 @@ server <- function(input, output, session) {
   ## mortality time series (health regions)
   data_ts_mortality_hr <- reactive({
     get_data("ts_mortality_hr", "date_death_report")
+  })
+  
+  ## case time series (health regions)
+  data_ts_cases_new_hr <- reactive({
+    get_data("ts_cases_new_hr", "date_report")
+  })
+  
+  ## mortality time series (health regions)
+  data_ts_mortality_new_hr <- reactive({
+    get_data("ts_mortality_new_hr", "date_death_report")
+  })
+  
+  ### add specific SK cumulative totals for back-dated data
+  data_ts_cases_new_add_hr <- reactive({
+    get_data("ts_cases_new_add_hr", "date_report")
+  })
+  
+  ## mortality time series (health regions)
+  data_ts_mortality_new_add_hr <- reactive({
+    get_data("ts_mortality_new_add_hr", "date_death_report")
   })
   
   ## case time series (filter by date only for pie chart)
@@ -898,14 +917,47 @@ server <- function(input, output, session) {
   
   ## load health region map
   load_geo_hr <- reactive({
-    st_read("geo/esri_health_region_sk_old/RegionalHealthBoundaries.shp", quiet = TRUE) %>%
+    
+    ### don't run without inputs defined
+    req(input$date_range)
+    
+    if(input$date_range[1]=="2020/01/25" & input$date_range[2]>="2020/08/04") {
+    st_read("geo/esri_health_region_sk_new/RegionalHealthBoundaries.shp", quiet = TRUE) %>%
       ### join health region names used in the dataset by HR_UID
       ### first convert HR_UID in map to integer so types match
       mutate(HR_UID = as.integer(HR_UID)) %>%
       inner_join(
-        map_hr,
+        hr_map_sk_new,
         by = "HR_UID"
       )
+    } else if (input$date_range[1]>="2020/08/04") {
+        st_read("geo/esri_health_region_sk_new/RegionalHealthBoundaries.shp", quiet = TRUE) %>%
+          ### join health region names used in the dataset by HR_UID
+          ### first convert HR_UID in map to integer so types match
+          mutate(HR_UID = as.integer(HR_UID)) %>%
+          inner_join(
+            hr_map_sk_new,
+            by = "HR_UID"
+          )
+      } else if(input$date_range[1]=="2020/01/25" & input$date_range[2]<"2020/08/04") {
+        st_read("geo/esri_health_region_sk_old/RegionalHealthBoundaries.shp", quiet = TRUE) %>%
+          ### join health region names used in the dataset by HR_UID
+          ### first convert HR_UID in map to integer so types match
+          mutate(HR_UID = as.integer(HR_UID)) %>%
+          inner_join(
+            map_hr,
+            by = "HR_UID"
+          )
+      } else if(input$date_range[1]!="2020/01/25" & input$date_range[1]<"2020/08/04") {
+        st_read("geo/esri_health_region_sk_old/RegionalHealthBoundaries.shp", quiet = TRUE) %>%
+          ### join health region names used in the dataset by HR_UID
+          ### first convert HR_UID in map to integer so types match
+          mutate(HR_UID = as.integer(HR_UID)) %>%
+          inner_join(
+            map_hr,
+            by = "HR_UID"
+          )
+      }
   })
   
   ## health region map title
@@ -933,23 +985,71 @@ server <- function(input, output, session) {
   data_choropleth_hr <- reactive({
     
     ### don't run without inputs defined
-    req(input$metric_choropleth_hr, input$scale_choropleth_hr)
-    
+    req(input$metric_choropleth_hr, input$scale_choropleth_hr,input$date_range)
+
     ### get data
+    
     if (input$metric_choropleth_hr == "cases") {
-      dat <- data_ts_cases_hr() %>%
-        left_join(
-          map_hr,
-          by = c("province", "health_region")
-        )
-      var_val <- "cases"
-    } else if (input$metric_choropleth_hr == "mortality") {
-      dat <- data_ts_mortality_hr() %>%
-        left_join(
-          map_hr,
-          by = c("province", "health_region")
-        )
-      var_val <- "deaths"
+      if(input$date_range[1]=="2020/01/25" & input$date_range[2]>="2020/08/04") {
+        dat <- data_ts_cases_new_add_hr() %>%
+          left_join(
+            hr_map_sk_new,
+            by = c("province", "health_region")
+          )
+        var_val <- "cases"
+      } else if(input$date_range[1]>="2020/08/04") {
+        dat <- data_ts_cases_new_hr() %>%
+          left_join(
+            hr_map_sk_new,
+            by = c("province", "health_region")
+          )
+        var_val <- "cases"
+      } else if(input$date_range[1]=="2020/01/25" & input$date_range[2]<"2020/08/04") {
+        dat <- data_ts_cases_hr() %>%
+          left_join(
+            map_hr,
+            by = c("province", "health_region")
+          )
+        var_val <- "cases"
+      } else if(input$date_range[1]!="2020/01/25" & input$date_range[1]<"2020/08/04") {
+        dat <- data_ts_cases_hr() %>%
+          left_join(
+            map_hr,
+            by = c("province", "health_region")
+          )
+        var_val <- "cases"
+      }
+    } else if(input$metric_choropleth_hr == "mortality") {
+      if(input$date_range[1]=="2020/01/25" & input$date_range[2]>="2020/08/04") {
+        dat <- data_ts_mortality_new_add_hr() %>%
+          left_join(
+            hr_map_sk_new,
+            by = c("province", "health_region")
+          )
+        var_val <- "deaths"
+      } else if(input$date_range[1]>="2020/08/04") {
+        dat <- data_ts_mortality_new_hr() %>%
+          left_join(
+            hr_map_sk_new,
+            by = c("province", "health_region")
+          )
+        var_val <- "deaths"
+      } else if(input$date_range[1]=="2020/01/25" & input$date_range[2]<"2020/08/04") {
+        dat <- data_ts_mortality_hr() %>%
+          left_join(
+            map_hr,
+            by = c("province", "health_region")
+          )
+        var_val <- "deaths"
+      }
+      else if(input$date_range[1]!="2020/01/25" & input$date_range[1]<"2020/08/04") {
+        dat <- data_ts_mortality_hr() %>%
+          left_join(
+            map_hr,
+            by = c("province", "health_region")
+          )
+        var_val <- "deaths"
+      }
     }
     
     ### process data
@@ -963,7 +1063,7 @@ server <- function(input, output, session) {
   output$choropleth_hr <- renderLeaflet({
     
     ### don't run without inputs defined
-    req(input$metric_choropleth_hr, input$scale_choropleth_hr)
+    req(input$metric_choropleth_hr, input$scale_choropleth_hr,input$date_range)
     
     ### load map
     geo_hr <- load_geo_hr()
@@ -1070,11 +1170,12 @@ server <- function(input, output, session) {
                 opacity = 0.5)
   })
   
+  
   ## health region map text
   output$text_choropleth_hr <- renderText({
     
     ### don't run without inputs defined
-    req(input$metric_choropleth_hr, input$scale_choropleth_hr)
+    req(input$metric_choropleth_hr, input$scale_choropleth_hr,input$date_range)
     
     ### get data and only keep data where province == "Repatriated" or health_region == "Not Reported"
     dat <- data_choropleth_hr() %>%

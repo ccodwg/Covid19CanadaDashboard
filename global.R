@@ -1,5 +1,6 @@
 # load libraries
-
+# ADDED
+#library(data.table)
 ## dashboard
 library(shiny)
 library(shinydashboard)
@@ -61,6 +62,8 @@ files <- matrix(
     "ts_active", "data/active_timeseries_prov.csv",
     "ts_cases_hr", "data/cases_timeseries_hr.csv",
     "ts_mortality_hr", "data/mortality_timeseries_hr.csv",
+    "ts_cases_new_hr","data/sk_new_cases_timeseries_hr.csv",
+    "ts_mortality_new_hr","data/sk_new_mortality_timeseries_hr.csv",
     "ts_cases_canada", "data/cases_timeseries_canada.csv",
     "ts_mortality_canada", "data/mortality_timeseries_canada.csv",
     "ts_recovered_canada", "data/recovered_timeseries_canada.csv",
@@ -75,10 +78,11 @@ files <- matrix(
     "hosp", "data/hosp.csv",
     "map_hr", "data/hr_map.csv",
     "map_prov", "data/prov_map.csv",
+    "hr_map_sk_new", "data/hr_map_sk_new.csv",
     "map_age_cases", "data/age_map_cases.csv",
     "map_age_mortality", "data/age_map_mortality.csv",
     "info_testing", "text/info_testing.csv"
-    ),
+  ),
   byrow = TRUE,
   ncol = 2
 )
@@ -99,6 +103,29 @@ for (i in 1:nrow(files)) {
 ## merge individual-level data
 cases <- bind_rows(cases_2020, cases_2021)
 mortality <- bind_rows(mortality_2020, mortality_2021)
+
+## ADDED: merge SK new HR with rest of HR data
+
+ts_cases_new_hr <- bind_rows(ts_cases_hr[(ts_cases_hr$province!="Saskatchewan"),],ts_cases_new_hr)
+ts_mortality_new_hr <- bind_rows(ts_mortality_hr[(ts_mortality_hr$province!="Saskatchewan"),],ts_mortality_new_hr)
+
+## get cumulative cases and mortality for SK at start date (2020-08-04)
+
+ts_cases_new_add_hr <- ts_cases_new_hr[(ts_cases_new_hr$province=="Saskatchewan" &
+                                          ts_cases_new_hr$date_report=="2020-08-04"),]
+ts_mortality_new_add_hr <- ts_mortality_new_hr[(ts_mortality_new_hr$province=="Saskatchewan" &
+                                                  ts_mortality_new_hr$date_death_report=="2020-08-04"),]
+
+# add cumulative cases to case count
+ts_cases_new_add_hr$cases <- ts_cases_new_add_hr$cumulative_cases
+ts_mortality_new_add_hr$deaths <- ts_mortality_new_add_hr$cumulative_deaths
+
+# bind cumulative numbers to data frame
+ts_cases_new_add_hr <- bind_rows(ts_cases_new_add_hr,ts_cases_new_hr[!(ts_cases_new_hr$province=="Saskatchewan" &
+                                                                         ts_cases_new_hr$date_report=="2020-08-04"),])
+ts_mortality_new_add_hr <- bind_rows(ts_mortality_new_add_hr,ts_mortality_new_hr[!(ts_mortality_new_hr$province=="Saskatchewan" &
+                                                                                ts_mortality_new_hr$date_death_report=="2020-08-04"),])
+
 
 ## add province short codes, full names, and populations to datasets
 for (i in c("cases", "mortality", "ts_cases", "ts_mortality", "ts_recovered", "ts_testing", "ts_active", "ts_vaccine_administration", "ts_vaccine_distribution", "ts_vaccine_completion")) {
@@ -398,7 +425,7 @@ info_testing <- info_testing %>%
   ### create proper hyperlinks to sources
   mutate(
     Source = paste0("<a href='", Source, "' target='_blank'>", "Link","</a>")
-    )
+  )
 
 # load 
 
