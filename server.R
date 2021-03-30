@@ -696,26 +696,22 @@ server <- function(input, output, session) {
   output$text_flattening <- renderText({
     if (input$scale_flattening == "linear") {
       "<center><b>Interpretation</b><br>
-  Graphs display trends for daily cases and deaths over time on a linear scale.
+  These graphs display trends for daily cases and deaths over time on a linear scale.
   <br><br>
   - An <i>upward slope</i> means the number of cases/deaths reported each day is <i>still growing</i>.
   <br>
   - A <i>flat line</i> means the number of cases/deaths reported each day is <i>staying the same</i>. 
   <br>
-  - A <i>downward slope</i> means the number of cases/deaths reported each day is <i>falling</i>.
-  <br><br>
-  Exponential growth on a linear scale looks like a line curving in the upward direction.</center>"
+  - A <i>downward slope</i> means the number of cases/deaths reported each day is <i>falling</i>.</center>"
     } else if (input$scale_flattening == "logarithmic") {
       "<center><b>Interpretation</b><br>
-  Graphs display trends for daily cases and deaths over time on a logarithmic scale.
+  These graphs display trends for daily cases and deaths over time on a logarithmic scale.
   <br><br>
   - An <i>upward slope</i> means the number of cases/deaths reported each day is <i>still growing</i>.
   <br>
   - A <i>flat line</i> means the number of cases/deaths reported each day is <i>staying the same</i>. 
   <br>
-  - A <i>downward slope</i> means the number of cases/deaths reported each day is <i>falling</i>.
-  <br><br>
-  Exponential growth on a logarithmic scale looks like a straight line pointing in the upward direction.</center>"
+  - A <i>downward slope</i> means the number of cases/deaths reported each day is <i>falling</i>.</center>"
     }
   })
   
