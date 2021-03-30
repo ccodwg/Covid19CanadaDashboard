@@ -696,22 +696,10 @@ server <- function(input, output, session) {
   output$text_flattening <- renderText({
     if (input$scale_flattening == "linear") {
       "<center><b>Interpretation</b><br>
-  These graphs display trends for daily cases and deaths over time on a linear scale.
-  <br><br>
-  - An <i>upward slope</i> means the number of cases/deaths reported each day is <i>still growing</i>.
-  <br>
-  - A <i>flat line</i> means the number of cases/deaths reported each day is <i>staying the same</i>. 
-  <br>
-  - A <i>downward slope</i> means the number of cases/deaths reported each day is <i>falling</i>.</center>"
+  These graphs display trends for daily cases and deaths over time on a linear scale. An <i>upward slope</i> means the number of cases/deaths reported each day is <i>still growing</i>. A <i>flat line</i> means the number of cases/deaths reported each day is <i>staying the same</i>. A <i>downward slope</i> means the number of cases/deaths reported each day is <i>falling</i>.</center>"
     } else if (input$scale_flattening == "logarithmic") {
       "<center><b>Interpretation</b><br>
-  These graphs display trends for daily cases and deaths over time on a logarithmic scale.
-  <br><br>
-  - An <i>upward slope</i> means the number of cases/deaths reported each day is <i>still growing</i>.
-  <br>
-  - A <i>flat line</i> means the number of cases/deaths reported each day is <i>staying the same</i>. 
-  <br>
-  - A <i>downward slope</i> means the number of cases/deaths reported each day is <i>falling</i>.</center>"
+  These graphs display trends for daily cases and deaths over time on a logarithmic scale. An <i>upward slope</i> means the number of cases/deaths reported each day is <i>still growing</i>. A <i>flat line</i> means the number of cases/deaths reported each day is <i>staying the same</i>. A <i>downward slope</i> means the number of cases/deaths reported each day is <i>falling</i>.</center>"
     }
   })
   
@@ -757,9 +745,11 @@ server <- function(input, output, session) {
         colors = palette_province_short
       ) %>%
       add_lines() %>%
-      rangeslider(start = update_date - months(3), end = update_date) %>%
       layout(
-        xaxis = list(title = "Report date", fixedrange = TRUE, rangeslider = list(thickness = 0.1)),
+        xaxis = list(title = "Report date",
+                     fixedrange = TRUE,
+                     rangeslider = list(type = "date", thickness = 0.1)
+                     ),
         yaxis = {if (val_scale == "logarithmic") list(type = "log", title = lab_y, fixedrange = TRUE) else list(title = lab_y, fixedrange = TRUE)},
         legend = plotly_legend,
         showlegend = TRUE,
