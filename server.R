@@ -1164,9 +1164,9 @@ server <- function(input, output, session) {
     ### render text
     if (nrow(dat) == 0) {
       if (input$metric_choropleth_hr== "cases") {
-        HTML("No cases were excluded from the map due to missing health regions.")
+        HTML("No cases were excluded from the map due to missing health region information.")
       } else if (input$metric_choropleth_hr == "mortality") {
-        "No deaths were excluded from the map due to missing health regions."
+        "No deaths were excluded from the map due to missing health region information."
       }
     } else {
       HTML(
@@ -1177,7 +1177,7 @@ server <- function(input, output, session) {
           } else if (input$metric_choropleth_hr == "mortality") {
             "deaths"
           },
-          " from the map due to missing health regions:",
+          " from the map due to missing health region information:",
           "<ul>",
           paste("<li>", dat$province, ": ", dat$count, sep = "", collapse = ""),
           "</ul>")
