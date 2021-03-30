@@ -76,7 +76,7 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                   selected = "linear",
                                   inline = TRUE
                                 )),
-                              HTML("These charts may be viewed on a <b>linear scale</b> (by default) or a <b>logarithmic scale</b>. The choice of scale changes the interpretation of the plot. Select the scale using the button above."),
+                              HTML("<center>These charts may be viewed on a <b>linear scale</b> (by default) or a <b>logarithmic scale</b>. The choice of scale changes the interpretation of the plot. Select the scale using the button above.</center>"),
                               tags$p(""), # blank line
                               htmlOutput({"text_flattening"}),
                               tags$p(""), # blank line
