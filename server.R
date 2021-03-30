@@ -757,14 +757,14 @@ server <- function(input, output, session) {
         colors = palette_province_short
       ) %>%
       add_lines() %>%
+      rangeslider(start = update_date - months(3), end = update_date) %>%
       layout(
-        xaxis = list(title = "Report date", fixedrange = TRUE),
+        xaxis = list(title = "Report date", fixedrange = TRUE, rangeslider = list(thickness = 0.1)),
         yaxis = {if (val_scale == "logarithmic") list(type = "log", title = lab_y, fixedrange = TRUE) else list(title = lab_y, fixedrange = TRUE)},
         legend = plotly_legend,
         showlegend = TRUE,
         hovermode = "x unified"
       ) %>%
-      rangeslider(start = update_date - months(3), end = update_date) %>%
       config(
         displaylogo = FALSE,
         modeBarButtonsToRemove = plotly_buttons
