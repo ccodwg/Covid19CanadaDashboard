@@ -45,6 +45,7 @@ if (!is_local | !dir.exists("data")) {
 
 ## read update time and update notes
 update_time <- readLines("data/update_time.txt")
+update_date <- as.Date(update_time)
 news <- paste(readLines("data/news.txt"), collapse = "\n")
 
 ## list data files to be loaded

@@ -768,6 +768,7 @@ server <- function(input, output, session) {
         showlegend = TRUE,
         hovermode = "x unified"
       ) %>%
+      rangeslider(start = update_date - months(3), end = update_date) %>%
       config(
         displaylogo = FALSE,
         modeBarButtonsToRemove = plotly_buttons
