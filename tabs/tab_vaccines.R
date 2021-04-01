@@ -11,51 +11,27 @@ tab_vaccines <- tabItem(tabName = "tab_vaccines",
                                      ))
                             ),
                             tabPanel("Cumulative vaccine doses administered",
+                                     fluidRow(box(
+                                       title = textOutput("title_cumulative_vaccine_administration"),
+                                       width = 12,
+                                       plotlyOutput("plot_cumulative_vaccine_administration")
+                                     ))
+                            ),
+                            tabPanel("Cumulative vaccine doses administered per capita",
                                      fluidRow(
                                        box(
                                          title = textOutput("title_avaccine_per_capita"),
-                                         width = 10,
+                                         width = 9,
                                          plotlyOutput("plot_avaccine_per_capita")
                                        ),
                                        box(
                                          title = "More options",
-                                         width = 2,
-                                         radioButtons(
-                                           "plot_type_avacc",
-                                           "Plot type",
-                                           choices = c("Bar" = "bar-graph", "Line" = "time-series"),
-                                           selected = "time-series"
-                                         ),
+                                         width = 3,
                                          radioButtons(
                                            "scale_comp_avacc",
                                            "Absolute/per-capita",
                                            choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
-                                           selected = "absolute"
-                                         )
-                                       )
-                                     ),
-                            ),
-                            tabPanel("Cumulative vaccine doses distributed",
-                                     fluidRow(
-                                       box(
-                                         title = textOutput("title_dvaccine_per_capita"),
-                                         width = 10,
-                                         plotlyOutput("plot_dvaccine_per_capita")
-                                       ),
-                                       box(
-                                         title = "More options",
-                                         width = 2,
-                                         radioButtons(
-                                           "plot_type_dvacc",
-                                           "Plot type",
-                                           choices = c("Bar" = "bar-graph", "Line" = "time-series"),
-                                           selected = "time-series"
-                                         ),
-                                         radioButtons(
-                                           "scale_comp_dvacc",
-                                           "Absolute/per-capita",
-                                           choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
-                                           selected = "absolute"
+                                           selected = "per-capita"
                                          )
                                        )
                                      ),
@@ -79,6 +55,33 @@ tab_vaccines <- tabItem(tabName = "tab_vaccines",
                                        plotlyOutput("plot_fully_vaccinated")
                                      )
                                      )
+                            ),
+                            tabPanel("Cumulative vaccine doses distributed",
+                                     fluidRow(box(
+                                       title = textOutput("title_cumulative_vaccine_distribution"),
+                                       width = 12,
+                                       plotlyOutput("plot_cumulative_vaccine_distribution")
+                                     )
+                                     )
+                            ),
+                            tabPanel("Cumulative vaccine doses distributed per capita",
+                                     fluidRow(
+                                       box(
+                                         title = textOutput("title_dvaccine_per_capita"),
+                                         width = 9,
+                                         plotlyOutput("plot_dvaccine_per_capita")
+                                       ),
+                                       box(
+                                         title = "More options",
+                                         width = 3,
+                                         radioButtons(
+                                           "scale_comp_dvacc",
+                                           "Absolute/per-capita",
+                                           choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
+                                           selected = "per-capita"
+                                         )
+                                       )
+                                     ),
                             )
                           ),
                           tabsetPanel(

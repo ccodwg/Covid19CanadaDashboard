@@ -10,24 +10,8 @@ tab_cases <- tabItem(tabName = "tab_cases",
                        tabPanel("Cumulative reported cases",
                                 fluidRow(box(
                                   title = textOutput("title_cumulative_cases"),
-                                  width = 10,
+                                  width = 12,
                                   plotlyOutput("plot_cumulative_cases")
-                                ),
-                                box(
-                                  title = "More options",
-                                  width = 2,
-                                  radioButtons(
-                                    "plot_type_cases",
-                                    "Plot type",
-                                    choices = c("Bar" = "bar-graph", "Line" = "time-series"),
-                                    selected = "time-series"
-                                  ),
-                                  radioButtons(
-                                    "scale_cases",
-                                    "Absolute/per-capita",
-                                    choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
-                                    selected = "absolute"
-                                  )
                                 ))),
                        tabPanel("Pie chart",
                                 fluidRow(box(

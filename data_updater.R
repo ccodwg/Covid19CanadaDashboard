@@ -23,8 +23,7 @@ if (dir.exists(paste(tempd, "Covid19Canada-master", sep = "/"))) {
     "cases_timeseries_canada.csv", "mortality_timeseries_canada.csv", "recovered_timeseries_canada.csv", "testing_timeseries_canada.csv", "active_timeseries_canada.csv",
     "vaccine_administration_timeseries_prov.csv", "vaccine_administration_timeseries_canada.csv",
     "vaccine_distribution_timeseries_prov.csv", "vaccine_distribution_timeseries_canada.csv",
-    "vaccine_completion_timeseries_prov.csv", "vaccine_completion_timeseries_canada.csv",
-    "sk_new_cases_timeseries_hr.csv","sk_new_mortality_timeseries_hr.csv"
+    "vaccine_completion_timeseries_prov.csv", "vaccine_completion_timeseries_canada.csv"
     )]) {
     file_destination <- paste0("data/", basename(f))
     message("Copying: ", file_destination)
@@ -35,7 +34,7 @@ if (dir.exists(paste(tempd, "Covid19Canada-master", sep = "/"))) {
 ## copy other files
 if (dir.exists(paste(tempd, "Covid19Canada-master", sep = "/"))) {
   for (f in list.files(paste(tempd, "Covid19Canada-master", sep = "/"), recursive = TRUE, full.names = TRUE)[basename(list.files(paste(tempd, "Covid19Canada-master", sep = "/"), recursive = TRUE)) %in% c(
-    "age_map_cases.csv", "age_map_mortality.csv", "prov_map.csv", "hr_map.csv","hr_map_sk_new.csv"
+    "age_map_cases.csv", "age_map_mortality.csv", "prov_map.csv", "hr_map.csv"
   )]) {
     file_destination <- paste0("data/", basename(f))
     message("Copying: ", file_destination)
@@ -56,8 +55,7 @@ hosp <- fromJSON("https://api.covid19tracker.ca/summary/split")$data %>%
     hosp_cases_change = change_hospitalizations) %>%
   inner_join(
     data.frame("prov_short" = c("NL", "PE", "NS", "NB", "QC", "ON", "MB", "SK", "AB", "BC", "YT", "NT", "NU"),
-               "province" = c("NL", "PEI", "Nova Scotia", "New Brunswick", "Quebec", "Ontario", "Manitoba",
-                              "Saskatchewan", "Alberta", "BC", "Yukon", "NWT", "Nunavut"),
+               "province" = c("NL", "PEI", "Nova Scotia", "New Brunswick", "Quebec", "Ontario", "Manitoba", "Saskatchewan", "Alberta", "BC", "Yukon", "NWT", "Nunavut"),
                stringsAsFactors = FALSE),
     by = "prov_short"
   ) %>%

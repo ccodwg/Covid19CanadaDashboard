@@ -45,7 +45,6 @@ if (!is_local | !dir.exists("data")) {
 
 ## read update time and update notes
 update_time <- readLines("data/update_time.txt")
-update_date <- as.Date(update_time)
 news <- paste(readLines("data/news.txt"), collapse = "\n")
 
 ## list data files to be loaded
@@ -56,15 +55,15 @@ files <- matrix(
     "mortality_2020", "data/mortality_2020.csv",
     "mortality_2021", "data/mortality_2021.csv",
     "ts_cases", "data/cases_timeseries_prov.csv",
+    "ts_variants", "data/variants_timeseries_prov.csv",
     "ts_mortality", "data/mortality_timeseries_prov.csv",
     "ts_recovered", "data/recovered_timeseries_prov.csv",
     "ts_testing", "data/testing_timeseries_prov.csv",
     "ts_active", "data/active_timeseries_prov.csv",
     "ts_cases_hr", "data/cases_timeseries_hr.csv",
     "ts_mortality_hr", "data/mortality_timeseries_hr.csv",
-    "ts_cases_new_hr","data/sk_new_cases_timeseries_hr.csv",
-    "ts_mortality_new_hr","data/sk_new_mortality_timeseries_hr.csv",
     "ts_cases_canada", "data/cases_timeseries_canada.csv",
+    "ts_variants_canada", "data/variants_timeseries_canada.csv",
     "ts_mortality_canada", "data/mortality_timeseries_canada.csv",
     "ts_recovered_canada", "data/recovered_timeseries_canada.csv",
     "ts_testing_canada", "data/testing_timeseries_canada.csv",
@@ -78,11 +77,10 @@ files <- matrix(
     "hosp", "data/hosp.csv",
     "map_hr", "data/hr_map.csv",
     "map_prov", "data/prov_map.csv",
-    "hr_map_sk_new", "data/hr_map_sk_new.csv",
     "map_age_cases", "data/age_map_cases.csv",
     "map_age_mortality", "data/age_map_mortality.csv",
     "info_testing", "text/info_testing.csv"
-  ),
+    ),
   byrow = TRUE,
   ncol = 2
 )
@@ -104,31 +102,9 @@ for (i in 1:nrow(files)) {
 cases <- bind_rows(cases_2020, cases_2021)
 mortality <- bind_rows(mortality_2020, mortality_2021)
 
-## ADDED: merge SK new HR with rest of HR data
-
-ts_cases_new_hr <- bind_rows(ts_cases_hr[(ts_cases_hr$province!="Saskatchewan"),],ts_cases_new_hr)
-ts_mortality_new_hr <- bind_rows(ts_mortality_hr[(ts_mortality_hr$province!="Saskatchewan"),],ts_mortality_new_hr)
-
-## get cumulative cases and mortality for SK at start date (2020-08-04)
-
-ts_cases_new_add_hr <- ts_cases_new_hr[(ts_cases_new_hr$province=="Saskatchewan" &
-                                          ts_cases_new_hr$date_report=="2020-08-04"),]
-ts_mortality_new_add_hr <- ts_mortality_new_hr[(ts_mortality_new_hr$province=="Saskatchewan" &
-                                                  ts_mortality_new_hr$date_death_report=="2020-08-04"),]
-
-# add cumulative cases to case count
-ts_cases_new_add_hr$cases <- ts_cases_new_add_hr$cumulative_cases
-ts_mortality_new_add_hr$deaths <- ts_mortality_new_add_hr$cumulative_deaths
-
-# bind cumulative numbers to data frame
-ts_cases_new_add_hr <- bind_rows(ts_cases_new_add_hr,ts_cases_new_hr[!(ts_cases_new_hr$province=="Saskatchewan" &
-                                                                         ts_cases_new_hr$date_report=="2020-08-04"),])
-ts_mortality_new_add_hr <- bind_rows(ts_mortality_new_add_hr,ts_mortality_new_hr[!(ts_mortality_new_hr$province=="Saskatchewan" &
-                                                                                ts_mortality_new_hr$date_death_report=="2020-08-04"),])
-
 
 ## add province short codes, full names, and populations to datasets
-for (i in c("cases", "mortality", "ts_cases", "ts_mortality", "ts_recovered", "ts_testing", "ts_active", "ts_vaccine_administration", "ts_vaccine_distribution", "ts_vaccine_completion")) {
+for (i in c("cases", "ts_variants", "mortality", "ts_cases", "ts_mortality", "ts_recovered", "ts_testing", "ts_active", "ts_vaccine_administration", "ts_vaccine_distribution", "ts_vaccine_completion")) {
   assign(
     i,
     get(i) %>%
@@ -138,6 +114,55 @@ for (i in c("cases", "mortality", "ts_cases", "ts_mortality", "ts_recovered", "t
       )
   )
 }
+
+
+
+## make separate df for variant cases (to pull data for summary tables)
+
+ts_b117_variants_canada <- ts_variants_canada[(ts_variants_canada$variant=="B117"),]
+ts_b1351_variants_canada <- ts_variants_canada[(ts_variants_canada$variant=="B1351"),]
+ts_p1_variants_canada <- ts_variants_canada[(ts_variants_canada$variant=="P1"),]
+
+## variant cases - daily and cumulative
+
+ts_b117_variants <- ts_variants[(ts_variants$variant=="B117"),]
+ts_b117_variants_add <- ts_b117_variants[(ts_b117_variants$date_report=="2021-02-04"),]
+ts_b117_variants_add$variant_cases <- ts_b117_variants_add$cumulative_variant_cases
+ts_b117_variants_add$date_report[ts_b117_variants_add$date_report=="2021-02-04"] <- "2021-02-03"
+ts_b117_variants_add$variant_cases <- ts_b117_variants_add$cumulative_variant_cases
+ts_b117_variants <- bind_rows(ts_b117_variants_add,ts_b117_variants)
+ts_b117_variants <- ts_b117_variants %>% rename(b117_variant_cases = variant_cases,
+                                                b117_cumulative_variant_cases = cumulative_variant_cases)
+
+ts_b1351_variants <- ts_variants[(ts_variants$variant=="B1351"),]
+ts_b1351_variants_add <- ts_b1351_variants[(ts_b1351_variants$date_report=="2021-02-04"),]
+ts_b1351_variants_add$variant_cases <- ts_b1351_variants_add$cumulative_variant_cases
+ts_b1351_variants_add$date_report[ts_b1351_variants_add$date_report=="2021-02-04"] <- "2021-02-03"
+ts_b1351_variants_add$variant_cases <- ts_b1351_variants_add$cumulative_variant_cases
+ts_b1351_variants <- bind_rows(ts_b1351_variants_add,ts_b1351_variants)
+ts_b1351_variants <- ts_b1351_variants %>% rename(b1351_variant_cases = variant_cases,
+                                                  b1351_cumulative_variant_cases = cumulative_variant_cases)
+
+ts_p1_variants <- ts_variants[(ts_variants$variant=="P1"),]
+ts_p1_variants_add <- ts_p1_variants[(ts_p1_variants$date_report=="2021-02-04"),]
+ts_p1_variants_add$variant_cases <- ts_p1_variants_add$cumulative_variant_cases
+ts_p1_variants_add$date_report[ts_p1_variants_add$date_report=="2021-02-04"] <- "2021-02-03"
+ts_p1_variants_add$variant_cases <- ts_p1_variants_add$cumulative_variant_cases
+ts_p1_variants <- bind_rows(ts_p1_variants_add,ts_p1_variants)
+ts_p1_variants <- ts_p1_variants %>% rename(p1_variant_cases = variant_cases,
+                                            p1_cumulative_variant_cases = cumulative_variant_cases)
+
+ts_variants_wide <- cbind(ts_b117_variants,ts_b1351_variants,ts_p1_variants)
+ts_variants_wide <- ts_variants_wide[c("province","date_report","province_full","province_short","pop",
+                             "b117_variant_cases","b117_cumulative_variant_cases",
+                             "b1351_variant_cases","b1351_cumulative_variant_cases",
+                             "p1_variant_cases","p1_cumulative_variant_cases")]
+
+ts_variants_wide$variant_cases <- ts_variants_wide$b117_variant_cases + ts_variants_wide$b1351_variant_cases + ts_variants_wide$p1_variant_cases
+ts_variants_wide$cumulative_variant_cases <- ts_variants_wide$b117_cumulative_variant_cases + ts_variants_wide$b1351_cumulative_variant_cases + ts_variants_wide$p1_cumulative_variant_cases
+
+ts_variants_wide <- merge(ts_variants_wide, ts_cases[c("province","date_report","cases","cumulative_cases")], by = c("province","date_report"))
+
 
 ## process case data
 cases <- cases %>%
@@ -274,6 +299,14 @@ table_overview <- ts_cases %>%
   group_by(province) %>%
   filter(date_report == date_max) %>%
   left_join(
+    ts_variants_wide %>%
+      select(province, date_report, b117_variant_cases, b1351_variant_cases, p1_variant_cases,
+             b117_cumulative_variant_cases, b1351_cumulative_variant_cases, p1_cumulative_variant_cases,) %>%
+      group_by(province) %>%
+      filter(date_report == date_max),
+    by = "province"
+  ) %>%
+  left_join(
     ts_mortality %>%
       group_by(province) %>%
       filter(date_death_report == date_max),
@@ -322,7 +355,10 @@ table_overview <- ts_cases %>%
       select(province, pop),
     by = "province"
   ) %>%
-  select(province, cases, cumulative_cases,
+  select(province, cases,
+         b117_variant_cases, b1351_variant_cases, p1_variant_cases,
+         b117_cumulative_variant_cases, b1351_cumulative_variant_cases, p1_cumulative_variant_cases,
+         cumulative_cases,
          active_cases, active_cases_change,
          avaccine, cumulative_avaccine,
          cvaccine, cumulative_cvaccine,
@@ -335,7 +371,13 @@ table_overview <- ts_cases %>%
     data.frame(
       "province" = "Canada",
       "cases" = ts_cases_canada %>% filter(date_report == date_max) %>% pull(cases),
+      "b117_variant_cases" = ts_b117_variants_canada %>% filter(date_report == date_max) %>% pull(variant_cases),
+      "b1351_variant_cases" = ts_b1351_variants_canada %>% filter(date_report == date_max) %>% pull(variant_cases),
+      "p1_variant_cases" = ts_p1_variants_canada %>% filter(date_report == date_max) %>% pull(variant_cases),
       "cumulative_cases" = ts_cases_canada %>% filter(date_report == date_max) %>% pull(cumulative_cases),
+      "b117_cumulative_variant_cases" = ts_b117_variants_canada %>% filter(date_report == date_max) %>% pull(cumulative_variant_cases),
+      "b1351_cumulative_variant_cases" = ts_b1351_variants_canada %>% filter(date_report == date_max) %>% pull(cumulative_variant_cases),
+      "p1_cumulative_variant_cases" = ts_p1_variants_canada %>% filter(date_report == date_max) %>% pull(cumulative_variant_cases),
       "active_cases" = ts_active_canada %>% filter(date_active == date_max) %>% pull(active_cases),
       "active_cases_change" = ts_active_canada %>% filter(date_active == date_max) %>% pull(active_cases_change),
       "cumulative_avaccine" = ts_vaccine_administration_canada %>% filter(date_vaccine_administered == date_max) %>% pull(cumulative_avaccine),
@@ -354,7 +396,13 @@ table_overview <- ts_cases %>%
       stringsAsFactors = FALSE)
   ) %>%
   replace_na(list(cases = 0,
+                  b117_variant_cases = 0,
+                  b1351_variant_cases = 0,
+                  p1_variant_cases = 0,
                   cumulative_cases = 0,
+                  b117_cumulative_variant_cases = 0,
+                  b1351_cumulative_variant_cases = 0,
+                  p1_cumulative_variant_cases = 0,
                   active_cases = 0,
                   active_cases_change = 0,
                   avaccine = 0,
@@ -380,6 +428,8 @@ table_overview <- ts_cases %>%
   select(
     province,
     cumulative_cases, cases, cases_per_100k, cumulative_cases_per_100k,
+    b117_variant_cases, b1351_variant_cases, p1_variant_cases,
+    b117_cumulative_variant_cases, b1351_cumulative_variant_cases, p1_cumulative_variant_cases,
     active_cases, active_cases_change, active_cases_per_100k,
     avaccine, cumulative_avaccine,
     cvaccine, cumulative_cvaccine,
@@ -391,7 +441,13 @@ table_overview <- ts_cases %>%
   rename(
     `Province` = province,
     `Cumulative cases` = cumulative_cases,
+    `Cumulative B117 Variant Cases` = b117_cumulative_variant_cases,
+    `Cumulative B1351 Variant Cases` = b1351_cumulative_variant_cases,
+    `Cumulative P1 Variant Cases` = p1_cumulative_variant_cases,
     `Cases (new)` = cases,
+    `B117 Variant Cases (new)` = b117_variant_cases,
+    `B1351 Variant Cases (new)` = b1351_variant_cases,
+    `P1 Variant Cases (new)` = p1_variant_cases,
     `Cases (new) per 100k` = cases_per_100k,
     `Cumulative cases per 100k` = cumulative_cases_per_100k,
     `Active cases` = active_cases,
@@ -425,7 +481,7 @@ info_testing <- info_testing %>%
   ### create proper hyperlinks to sources
   mutate(
     Source = paste0("<a href='", Source, "' target='_blank'>", "Link","</a>")
-  )
+    )
 
 # load 
 
