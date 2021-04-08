@@ -2062,25 +2062,20 @@ server <- function(input, output, session) {
       left_join(map_prov, by = "province") %>% 
       dplyr::mutate(
         total_needed = (input$pct_vaccination/100) * 2 * pop,
-        date_to_vaxx = max(date_vaccine_administered) + round((total_needed - current_cum) / roll_avg, 0),
+        total_remaining = total_needed - current_cum,
+        date_to_vaxx = max(date_vaccine_administered) + round((total_remaining) / roll_avg, 0),
         days_to_vaxx = date_to_vaxx - date_vaccine_administered,
         weeks_to_vaxx = as.numeric(days_to_vaxx) / 7,
         mths_to_vaxx = as.numeric(days_to_vaxx) / 12
       ) %>% 
-      mutate_if(is.numeric, round, 1) %>% 
-      mutate(
-        roll_avg_lab = formatC(roll_avg, digits = 1, format = "f", big.mark = ","),
-        pop_lab = formatC(pop, digits = 0, format = "f", big.mark = ","),
-        current_cum_lab = formatC(current_cum, digits = 0, format = "f", big.mark = ","),
-        total_needed_lab = formatC(total_needed, digits = 0, format = "f", big.mark = ",")
-      ) %>% 
-      select(province, pop_lab, current_cum_lab, roll_avg_lab, total_needed_lab, date_to_vaxx) %>% 
+      mutate_if(is.numeric, round, 1) %>%
+      select(province, pop, current_cum, roll_avg, total_remaining, date_to_vaxx) %>% 
       dplyr::rename(
         "Province" = province,
-        "Population" = pop_lab,
-        "Total doses administered" = current_cum_lab,
-        "7-day rolling average of doses administered" = roll_avg_lab,
-        "Remaining doses needed<sup> a</sup>" = total_needed_lab,
+        "Population" = pop,
+        "Total doses administered" = current_cum,
+        "7-day rolling average of doses administered" = roll_avg,
+        "Remaining doses needed<sup> a</sup>" = total_remaining,
         !!paste0("Expected date to reach ", input$pct_vaccination, "% fully vaccinated", "<sup> b</sup>") := date_to_vaxx)
     
     table_time_to_pct_vaccination %>%
@@ -2103,7 +2098,9 @@ server <- function(input, output, session) {
                       columnDefs = list(list(className = 'dt-center', targets = 1:(ncol(.) - 1))),
                       ### freeze province column
                       fixedColumns = list(leftColumns = 1:(ncol(.) - 1))
-                    ))
+                    )) %>%
+      formatRound(columns = c("Population", "Total doses administered", "Remaining doses needed<sup> a</sup>"), digits = 0) %>%
+      formatRound(columns = "7-day rolling average of doses administered", digits = 1)
     
   })
   
