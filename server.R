@@ -1310,19 +1310,19 @@ server <- function(input, output, session) {
   })
   
   ## daily numbers: B117 variant cases
-  output$title_daily_b117_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "b117_variant_cases", "Cumulative reported cases", exclude_repatriated = TRUE, by_province = TRUE)})
+  output$title_daily_b117_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "b117_variant_cases", "Daily Reported Cases", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_daily_b117_variants <- renderPlotly({
     plot_daily(data_ts_variants_total() %>% filter(date_report != "2021-02-03"), "date_report", "b117_variant_cases", "Report date", "Reported cases")
   })
   
   ## daily numbers: B1351 variant cases
-  output$title_daily_b1351_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "b1351_variant_cases", "Cumulative reported cases", exclude_repatriated = TRUE, by_province = TRUE)})
+  output$title_daily_b1351_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "b1351_variant_cases", "Daily Reported Cases", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_daily_b1351_variants <- renderPlotly({
     plot_daily(data_ts_variants_total() %>% filter(date_report != "2021-02-03"), "date_report", "b1351_variant_cases", "Report date", "Reported cases")
   })
   
   ## daily numbers: P1 variant cases
-  output$title_daily_p1_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "p1_variant_cases", "Cumulative reported cases", exclude_repatriated = TRUE, by_province = TRUE)})
+  output$title_daily_p1_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "p1_variant_cases", "Daily Reported Cases", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_daily_p1_variants <- renderPlotly({
     plot_daily(data_ts_variants_total() %>% filter(date_report != "2021-02-03"), "date_report", "p1_variant_cases", "Report date", "Reported cases")
   })
@@ -1358,25 +1358,25 @@ server <- function(input, output, session) {
   })
   
   ## cumulative numbers: total variant cases
-  output$title_cumulative_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "variant_cases", "Cumulative reported cases", exclude_repatriated = TRUE, by_province = TRUE)})
+  output$title_cumulative_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "variant_cases", "Cumulative Reported Cases", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_variants <- renderPlotly({
     plot_cumulative(data_ts_variants_total() %>% filter(date_report != "2021-02-03"), "date_report", "cumulative_variant_cases", "Report date", "Cumulative reported cases")
   })
   
   ## cumulative numbers: B117 variant cases
-  output$title_cumulative_b117_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "b117_variant_cases", "Cumulative reported cases", exclude_repatriated = TRUE, by_province = TRUE)})
+  output$title_cumulative_b117_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "b117_variant_cases", "Cumulative Reported Cases", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_b117_variants <- renderPlotly({
     plot_cumulative(data_ts_variants_total() %>% filter(date_report != "2021-02-03"), "date_report", "b117_cumulative_variant_cases", "Report date", "Cumulative reported cases")
   })
   
   ## cumulative numbers: B1351 variant cases
-  output$title_cumulative_b1351_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "b1351_variant_cases", "Cumulative reported cases", exclude_repatriated = TRUE, by_province = TRUE)})
+  output$title_cumulative_b1351_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "b1351_variant_cases", "Cumulative Reported Cases", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_b1351_variants <- renderPlotly({
     plot_cumulative(data_ts_variants_total() %>% filter(date_report != "2021-02-03"), "date_report", "b1351_cumulative_variant_cases", "Report date", "Cumulative reported cases")
   })
   
   ## cumulative numbers: P1 variant cases
-  output$title_cumulative_p1_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "p1_variant_cases", "Cumulative reported cases", exclude_repatriated = TRUE, by_province = TRUE)})
+  output$title_cumulative_p1_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "p1_variant_cases", "Cumulative Reported Cases", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_cumulative_p1_variants <- renderPlotly({
     plot_cumulative(data_ts_variants_total() %>% filter(date_report != "2021-02-03"), "date_report", "p1_cumulative_variant_cases", "Report date", "Cumulative reported cases")
   })
