@@ -289,13 +289,13 @@ server <- function(input, output, session) {
   # summary numbers for overview tab
   
   ## function: summary numbers for overview tab
-  value_box_summary <- function(table_overview, var_cum, var_update, lab_title, colour_box, update_type = c("new", "change"), val_cum_format = c("raw", "million"), font_size_update = "40%") {
+  value_box_summary <- function(table_overview, var_cum, var_update, lab_title, colour_box, update_type = c("new", "change"), val_cum_format = c("raw", "thousand", "million"), font_size_update = "40%") {
     
     ### check update type (new or change +/-)
     match.arg(update_type, c("new", "change", several.ok = FALSE))
     
-    ### check cumulative value format (raw or millions)
-    match.arg(val_cum_format, c("raw", "million"), several.ok = FALSE)
+    ### check cumulative value format (raw, thousands or millions)
+    match.arg(val_cum_format, c("raw", "thousand", "million"), several.ok = FALSE)
     
     ### calculate values
     val_cum <- table_overview %>%
@@ -304,7 +304,9 @@ server <- function(input, output, session) {
       {
         if (val_cum_format == "raw") {
           formatC(., format = "f", digits = 0, big.mark = ",")
-        } else if (val_cum_format == "million") {
+          } else if (val_cum_format == "thousand") {
+            paste0(formatC(. / 1000, digits = 0, format = "f", big.mark = ","), "k")
+          } else if (val_cum_format == "million") {
           paste0(formatC(. / 1000000, digits = 2, format = "f", big.mark = ","), "m")
         }
       }
@@ -334,7 +336,7 @@ server <- function(input, output, session) {
   
   ## cases
   output$value_box_summary_cases <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative cases", "Cases (new)", "Reported cases", "orange", update_type = "new", val_cum_format = "raw")
+    value_box_summary(table_overview, "Cumulative cases", "Cases (new)", "Reported cases", "orange", update_type = "new", val_cum_format = "thousand")
   })
   
   ## active cases
@@ -344,7 +346,7 @@ server <- function(input, output, session) {
   
   ## recovered
   output$value_box_summary_recovered <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative recovered", "Recovered (new)", "Total recovered", "light-blue", update_type = "new", val_cum_format = "raw")
+    value_box_summary(table_overview, "Cumulative recovered", "Recovered (new)", "Total recovered", "light-blue", update_type = "new", val_cum_format = "thousand")
   })
   
   ## mortality
@@ -359,7 +361,7 @@ server <- function(input, output, session) {
   
   ## people fully vaccinated
   output$value_box_summary_fully_vaccinated <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative people fully vaccinated", "People fully vaccinated (new)", "People fully vaccinated", "aqua", update_type = "new", val_cum_format = "raw")
+    value_box_summary(table_overview, "Cumulative people fully vaccinated", "People fully vaccinated (new)", "People fully vaccinated", "aqua", update_type = "new", val_cum_format = "thousand")
   })
   
   ## hospitalized
