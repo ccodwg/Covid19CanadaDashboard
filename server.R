@@ -1236,6 +1236,10 @@ server <- function(input, output, session) {
   output$title_flattening_mortality <- renderText({title_flattening("Daily reported deaths by province")})
   output$plot_flattening_mortality <- renderPlotly({plot_flattening(data_ts_mortality(), "date_death_report", "deaths", "Daily reported deaths")})
   
+  ## daily doses administered (7-day rolling average)
+  output$title_flattening_avaccine <- renderText({title_flattening("Daily vaccine doses administered")})
+  output$plot_flattening_avaccine <- renderPlotly({plot_flattening(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Daily vaccine doses administered")})
+  
   # comparisons
   
   ## function: comparisons plot title

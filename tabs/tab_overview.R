@@ -78,6 +78,13 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                     title = textOutput("title_flattening_mortality"),
                                     plotlyOutput("plot_flattening_mortality"),
                                     width = 12))
+                                ),
+                                tabPanel(
+                                  "Daily doses administered",
+                                  fluidRow(box(
+                                    title = textOutput("title_flattening_avaccine"),
+                                    plotlyOutput("plot_flattening_avaccine"),
+                                    width = 12))
                                 )
                               ),
                               box(
