@@ -43,9 +43,24 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                   uiOutput("ui_window_choropleth_overview_cases"),
                                 ),
                                 tabPanel(
-                                  "VaxView",
+                                  "VaxView - Vaccine Administration",
                                   uiOutput("ui_plot_choropleth_overview_vaccine_administration"),
                                   uiOutput("ui_window_choropleth_overview_vaccine_administration"),
+                                ),
+                                tabPanel(
+                                  "VaxView - Vaccine Distribution",
+                                  uiOutput("ui_plot_choropleth_overview_vaccine_distribution"),
+                                  uiOutput("ui_window_choropleth_overview_vaccine_distribution"),
+                                ),
+                                tabPanel(
+                                  "VaxView - % Vaccines Administered per Total Distribution",
+                                  uiOutput("ui_plot_choropleth_overview_vaccine_admin_pct"),
+                                  uiOutput("ui_window_choropleth_overview_vaccine_admin_pct"),
+                                ),
+                                tabPanel(
+                                  "VaxView - % Fully Vaccinated",
+                                  uiOutput("ui_plot_choropleth_overview_vaccine_full_pct"),
+                                  uiOutput("ui_window_choropleth_overview_vaccine_full_pct"),
                                 )
                               ),
                               tabsetPanel(
