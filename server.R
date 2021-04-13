@@ -1989,7 +1989,7 @@ server <- function(input, output, session) {
   
   output$title_avaccine_per_capita <- renderText({
     
-    title_daily_cumulative_v2(data_ts_vaccine_administration(), "date_vaccine_administered", "cumulative_avaccine", "doses administered", input_scale = input$scale_comp_avacc, input_plot = input$plot_type_avacc, exclude_repatriated = TRUE, by_province = TRUE)
+    title_daily_cumulative_v2(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "doses administered", input_scale = input$scale_comp_avacc, input_plot = input$plot_type_avacc, exclude_repatriated = TRUE, by_province = TRUE)
   
   })
   
@@ -2018,7 +2018,7 @@ server <- function(input, output, session) {
   
   output$title_dvaccine_per_capita <- renderText({
     
-      title_daily_cumulative_v2(data_ts_vaccine_distribution(), "date_vaccine_distributed", "cumulative_dvaccine", "doses distributed", input_scale = input$scale_comp_dvacc, input_plot = input$plot_type_dvacc, exclude_repatriated = TRUE, by_province = TRUE)
+      title_daily_cumulative_v2(data_ts_vaccine_distribution(), "date_vaccine_distributed", "dvaccine", "doses distributed", input_scale = input$scale_comp_dvacc, input_plot = input$plot_type_dvacc, exclude_repatriated = TRUE, by_province = TRUE)
     
   })
   
