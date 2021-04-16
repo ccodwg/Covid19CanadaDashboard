@@ -2157,6 +2157,87 @@ server <- function(input, output, session) {
     
   })
   
+  ## percent partially vaccinated data
+  data_partially_vaccinated <- reactive({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range)
+    
+    ### merge data
+    dat <- data_ts_vaccine_administration() %>%
+        rename(date_vaccine = date_vaccine_administered) %>%
+        select(province, date_vaccine, cumulative_avaccine) %>%
+      replace_na(list(cumulative_avaccine = 0)) # 2020-12-13 is NA for avaccine
+    
+    ### collapse observations into one row per date
+    dat %>%
+      ### merge short names
+      left_join(map_prov %>% select(province, province_short, pop),
+                by = c("province")) %>% 
+      select(date_vaccine, pop, cumulative_avaccine, province_short) %>%
+      group_by(date_vaccine, province_short) %>%
+      summarize(across(everything(), sum), .groups = "drop") %>% 
+      mutate(
+        part_vaxx = 100 * cumulative_avaccine / pop,
+        lab_percent = paste0(formatC(part_vaxx, format = "f", digit = 2), "%")
+      ) %>% 
+      ungroup() %>% 
+      group_by(province_short) %>% 
+      filter(date_vaccine == max(date_vaccine))
+    
+  })
+  
+  ## percent fully vaccinated title
+  output$title_partially_vaccinated <- renderText({
+    
+    ### don't run without inputs defined
+    req(input$prov)
+    
+    if (input$prov != "all") {
+      paste("Percent partially vaccinated in", input$prov)
+    } else {
+      "Percent partially vaccinated in Canada"
+    }
+    
+  })
+  
+  ## percent partially vaccinated plot
+  output$plot_partially_vaccinated <- renderPlotly({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range)
+    
+    ### get merged vaccine data
+    dat <- data_partially_vaccinated()
+    
+    ### plot data
+    dat %>%
+      plot_ly() %>%
+      add_trace(
+        x = ~ province_short,
+        y = ~ part_vaxx,
+        type = "bar",
+        color = ~ province_short,
+        colors = palette_province_short,
+        hoverinfo = "text",
+        hovertext = ~ paste0(
+          "Province: ", dat$province_short, "\n",
+          "Partially vaccinated", ": ", dat$cumulative_cvaccine, "\n",
+          "Percent of total population: ", dat$lab_percent
+        )
+      ) %>% 
+      layout(
+        xaxis = list(title = "Province", fixedrange = TRUE),
+        yaxis = list(title = "Percent", fixedrange = TRUE),
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             modeBarButtonsToRemove = plotly_buttons)
+    
+  })
+  
+  
+  
   ## percent fully vaccinated data
   data_fully_vaccinated <- reactive({
     
