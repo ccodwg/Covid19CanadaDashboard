@@ -1622,17 +1622,20 @@ server <- function(input, output, session) {
     dat <- full_join(
       data_ts_vaccine_administration() %>%
         rename(date_vaccine = date_vaccine_administered) %>%
-        select(province, date_vaccine, cumulative_avaccine),
+        select(province, date_vaccine, avaccine, cumulative_avaccine),
       data_ts_vaccine_distribution() %>%
         rename(date_vaccine = date_vaccine_distributed) %>%
         select(province, date_vaccine, cumulative_dvaccine),
       by = c("province", "date_vaccine")
     ) %>%
-      replace_na(list(cumulative_avaccine = 0)) # 2020-12-13 is NA for avaccine
+      replace_na(list(
+        avaccine = 0,
+        cumulative_avaccine = 0
+        )) # 2020-12-13 is NA for avaccine
     
     ### collapse observations into one row per date
     dat %>%
-      select(date_vaccine, cumulative_dvaccine, cumulative_avaccine) %>%
+      select(date_vaccine, cumulative_dvaccine, avaccine, cumulative_avaccine) %>%
       group_by(date_vaccine) %>%
       summarize(across(everything(), sum), .groups = "drop")
     
@@ -1661,6 +1664,28 @@ server <- function(input, output, session) {
     ### get merged vaccine data
     dat <- data_vaccine_gap()
     
+    ### calculate 7-day average vaccine administration
+    admin_avg <- dat %>%
+      slice_tail(n = 7) %>%
+      pull(avaccine) %>%
+      mean
+    
+    ### project vaccine administration forward 7 days
+    vaxx_projection <- data.frame(
+      date_vaccine = seq.Date(from = date_max + 1, to = date_max + 7, by = "day"),
+      cumulative_avaccine = dat %>%
+        slice_tail(n = 1) %>%
+        pull(cumulative_avaccine) %>%
+        {. + admin_avg * 1:7}
+    ) %>%
+      bind_rows(
+        dat %>%
+          slice_tail(n = 1) %>%
+          select(date_vaccine, cumulative_avaccine)
+      ) %>%
+      rename(projected = cumulative_avaccine) %>%
+      arrange(date_vaccine)
+    
     ### plot
     dat %>%
       plot_ly(
@@ -1676,6 +1701,16 @@ server <- function(input, output, session) {
                 name = "Distributed",
                 fill = "tonexty",
                 fillcolor = "rgba(0, 0, 0, 0.7)"
+      ) %>%
+      add_trace(
+        data = vaxx_projection,
+        x = ~date_vaccine,
+        y = ~projected,
+        mode = "lines",
+        line = list(color = "black", dash = "dash"),
+        name = "Projected",
+        fill = "tozeroy",
+        fillcolor = "rgba(0, 0, 255, 0.1)"
       ) %>%
       layout(
         xaxis = list(title = "Date", fixedrange = TRUE, showgrid = FALSE),
