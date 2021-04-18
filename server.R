@@ -1664,6 +1664,17 @@ server <- function(input, output, session) {
     ### get merged vaccine data
     dat <- data_vaccine_gap()
     
+    ### calculate smoothed vaccine distribution
+    cumulative_dvaccine_min <- dat %>% filter(cumulative_dvaccine != 0) %>% pull(cumulative_dvaccine) %>% min
+    dat <- dat %>%
+      mutate(
+        cumulative_dvaccine_smooth = gam(cumulative_dvaccine ~ s(as.integer(date_vaccine), bs = "tp")) %>%
+          fitted %>% round(0),
+        cumulative_dvaccine_smooth = ifelse(cumulative_dvaccine_smooth < cumulative_dvaccine_min,
+                                            cumulative_dvaccine_min,
+                                            cumulative_dvaccine_smooth) # avoid negative values
+        )
+    
     ### calculate 7-day average vaccine administration
     admin_avg <- dat %>%
       slice_tail(n = 7) %>%
@@ -1686,37 +1697,75 @@ server <- function(input, output, session) {
       rename(projected = cumulative_avaccine) %>%
       arrange(date_vaccine)
     
+    ### join projection data
+    dat <- dat %>%
+      full_join(
+        vaxx_projection,
+        by = "date_vaccine"
+      )
+    
+    ### setup update menus
+    updatemenus <- list(
+      list(
+        type = "buttons",
+        direction = "right",
+        xanchor = "center",
+        yanchor = "top",
+        x = 0.1,
+        y = 1.21,
+        showactive = TRUE,
+          buttons = list(
+            list(method = "restyle",
+                 args = list("y", list(as.formula(~cumulative_dvaccine_smooth)), 2),
+                 args2 = list("y", list(as.formula(~cumulative_dvaccine)), 2),
+                 label = "Smoothed<br>distributed")
+          )
+  ))
     ### plot
     dat %>%
-      plot_ly(
-        x = ~date_vaccine, 
-        y = ~cumulative_avaccine, 
-        name = "Administered", 
+      plot_ly() %>%
+      add_trace(
         type = "scatter",
         mode = "none",
+        x = ~date_vaccine, 
+        y = ~cumulative_avaccine, 
+        name = "Administered",
         fill = "tozeroy",
         fillcolor = "rgba(0, 0, 255, 0.3)"
       ) %>%
-      add_trace(y = ~cumulative_dvaccine, 
-                name = "Distributed",
-                fill = "tonexty",
-                fillcolor = "rgba(0, 0, 0, 0.7)"
-      ) %>%
       add_trace(
-        data = vaxx_projection,
+        type = "scatter",
+        mode = "lines",
         x = ~date_vaccine,
         y = ~projected,
-        mode = "lines",
         line = list(color = "black", dash = "dash"),
         name = "Projected",
         fill = "tozeroy",
-        fillcolor = "rgba(0, 0, 255, 0.1)"
+        fillcolor = "rgba(0, 0, 255, 0.1)",
+        stackgroup = "one", # prevent weirdness with filling the other two traces
+        visible = "legendonly" # off by default
+      ) %>%
+     add_trace(
+       type = "scatter",
+       mode = "none",
+       x = ~date_vaccine, 
+       y = ~cumulative_dvaccine_smooth,
+       name = "Distributed",
+       fill = "tonexty",
+       fillcolor = "rgba(0, 0, 0, 0.7)"
       ) %>%
       layout(
         xaxis = list(title = "Date", fixedrange = TRUE, showgrid = FALSE),
         yaxis = list(title = "Vaccine doses", fixedrange = TRUE),
-        legend = plotly_legend,
-        hovermode = "x unified"
+        legend = list(
+          orientation = "v",
+          yanchor = "bottom",
+          y = 1.02,
+          xanchor = "right",
+          x = 1
+        ), # override default legend to work better with button,
+        hovermode = "x unified",
+        updatemenus = updatemenus
       ) %>%
       config(displaylogo = FALSE,
              modeBarButtonsToRemove = plotly_buttons)
