@@ -374,6 +374,29 @@ server <- function(input, output, session) {
     value_box_summary(table_overview, "Cumulative testing", "Testing (new)", "Total testing", "olive", update_type = "new", val_cum_format = "million")
   })
   
+  # label nudger for overview tab choropleth maps
+  choropleth_label_nudger <- function(labs) {
+    
+    ### manually nudge some label positions (x = label, ax = arrowhead tail)
+    labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
+    labs[labs$province_short == "MB", "y"] <- labs[labs$province_short == "MB", "y"] + 0.5
+    labs[labs$province_short == "ON", "y"] <- labs[labs$province_short == "ON", "y"] + 0.5
+    labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
+    labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
+    labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
+    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
+    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
+    labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
+    labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
+    labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
+    labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
+    labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
+    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
+    labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
+    labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
+    labs
+  }
+  
   # title for province case map for overview tab
   output$title_choropleth_overview_cases <- renderText({
     
@@ -418,23 +441,8 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
     
-    ### manually nudge some label positions (x = label, ax = arrowhead tail)
-    labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
-    labs[labs$province_short == "MB", "y"] <- labs[labs$province_short == "MB", "y"] + 0.5
-    labs[labs$province_short == "ON", "y"] <- labs[labs$province_short == "ON", "y"] + 0.5
-    labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
-    labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
-    labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
-    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
-    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
-    labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
-    labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
-    labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
-    labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
-    labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
-    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
-    labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
-    labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
     
     ### plot data
     plot_ly() %>%
@@ -562,23 +570,8 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
     
-    ### manually nudge some label positions (x = label, ax = arrowhead tail)
-    labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
-    labs[labs$province_short == "MB", "y"] <- labs[labs$province_short == "MB", "y"] + 0.5
-    labs[labs$province_short == "ON", "y"] <- labs[labs$province_short == "ON", "y"] + 0.5
-    labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
-    labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
-    labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
-    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
-    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
-    labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
-    labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
-    labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
-    labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
-    labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
-    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
-    labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
-    labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
     
     ### plot data
     plot_ly() %>%
@@ -706,23 +699,8 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
     
-    ### manually nudge some label positions (x = label, ax = arrowhead tail)
-    labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
-    labs[labs$province_short == "MB", "y"] <- labs[labs$province_short == "MB", "y"] + 0.5
-    labs[labs$province_short == "ON", "y"] <- labs[labs$province_short == "ON", "y"] + 0.5
-    labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
-    labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
-    labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
-    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
-    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
-    labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
-    labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
-    labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
-    labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
-    labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
-    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
-    labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
-    labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
     
     ### plot data
     plot_ly() %>%
@@ -866,23 +844,8 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
     
-    ### manually nudge some label positions (x = label, ax = arrowhead tail)
-    labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
-    labs[labs$province_short == "MB", "y"] <- labs[labs$province_short == "MB", "y"] + 0.5
-    labs[labs$province_short == "ON", "y"] <- labs[labs$province_short == "ON", "y"] + 0.5
-    labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
-    labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
-    labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
-    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
-    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
-    labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
-    labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
-    labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
-    labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
-    labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
-    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
-    labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
-    labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
     
     ### plot data
     plot_ly() %>%
@@ -1010,23 +973,8 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
     
-    ### manually nudge some label positions (x = label, ax = arrowhead tail)
-    labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
-    labs[labs$province_short == "MB", "y"] <- labs[labs$province_short == "MB", "y"] + 0.5
-    labs[labs$province_short == "ON", "y"] <- labs[labs$province_short == "ON", "y"] + 0.5
-    labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
-    labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
-    labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
-    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
-    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
-    labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
-    labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
-    labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
-    labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
-    labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
-    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
-    labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
-    labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
     
     ### plot data
     plot_ly() %>%
@@ -1148,23 +1096,8 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
     
-    ### manually nudge some label positions (x = label, ax = arrowhead tail)
-    labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
-    labs[labs$province_short == "MB", "y"] <- labs[labs$province_short == "MB", "y"] + 0.5
-    labs[labs$province_short == "ON", "y"] <- labs[labs$province_short == "ON", "y"] + 0.5
-    labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
-    labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
-    labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
-    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
-    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
-    labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
-    labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
-    labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
-    labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
-    labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
-    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
-    labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
-    labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
     
     ### plot data
     plot_ly() %>%
