@@ -62,9 +62,9 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                       uiOutput("ui_window_choropleth_overview_vaccine_admin_pct"),
                                     ),
                                     tabPanel(
-                                      "% Partially Vaccinated",
-                                      uiOutput("ui_plot_choropleth_overview_vaccine_partial_pct"),
-                                      uiOutput("ui_window_choropleth_overview_vaccine_partial_pct"),
+                                      "% At Least One Dose",
+                                      uiOutput("ui_plot_choropleth_overview_vaccine_at_least_one_dose"),
+                                      uiOutput("ui_window_choropleth_overview_vaccine_at_least_one_dose"),
                                     ),
                                     tabPanel(
                                       "% Fully Vaccinated",
@@ -72,6 +72,7 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                       uiOutput("ui_window_choropleth_overview_vaccine_full_pct"),
                                     )
                                   ))),
+                              HTML("<br>"), # blank line
                                 tabsetPanel(
                                   type = "tabs",
                                   tabPanel(

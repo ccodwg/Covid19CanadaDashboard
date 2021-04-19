@@ -947,7 +947,7 @@ server <- function(input, output, session) {
   
   
   # title for province vaccine map for overview tab
-  output$title_choropleth_overview_vaccine_partial_pct <- renderText({
+  output$title_choropleth_overview_vaccine_at_least_one_dose <- renderText({
 
     # max_days = data_ts_vaccine_administration() %>% pull(date_vaccine_administered) %>% unique %>% length
     last_day = data_ts_vaccine_administration() %>% 
@@ -956,14 +956,17 @@ server <- function(input, output, session) {
       format("%b %d, %Y")
     
     ### render text
-    paste("Percent partially vaccinated by province/territory as of", last_day)
+    paste("Percent at least one dose by province/territory as of", last_day)
     
   })
   
   # province vaccine administration map for overview tab
-  output$plot_choropleth_overview_vaccine_partial_pct <- renderPlotly({
+  output$plot_choropleth_overview_vaccine_at_least_one_dose <- renderPlotly({
     
-    max_days = data_ts_vaccine_administration() %>% pull(date_vaccine_administered) %>% unique %>% length
+    max_days = data_ts_vaccine_administration() %>%
+      pull(date_vaccine_administered) %>%
+      unique %>%
+      length
     
     ### join provincial vaccine numbers for relevant window to provincial map
     dat <- geo_prov_simple %>%
@@ -987,19 +990,19 @@ server <- function(input, output, session) {
                       cvaccine = 0)) %>%  # 2020-12-13 is NA for avaccine
       
       mutate(one_dose = avaccine - cvaccine,
-             pct_partial_vacc = 100 * one_dose / pop,
-             pct_partial_vacc = round(pct_partial_vacc, 2))
+             pct_at_least_one_dose = 100 * one_dose / pop,
+             pct_at_least_one_dose = round(pct_at_least_one_dose, 2))
     
     ### even out colour scale by rooting vaccine numbers
     dat <- dat %>%
-      mutate(cases_colour = pct_partial_vacc^(1/3))
+      mutate(cases_colour = pct_at_least_one_dose^(1/3))
     
     ### define value labels
     labs <- data.frame(
       province_short = dat[["province_short"]],
       x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
-      lab_cases = format(dat[["pct_partial_vacc"]], big.mark = ",", trim = TRUE),
+      lab_cases = format(dat[["pct_at_least_one_dose"]], big.mark = ",", trim = TRUE),
       ### arrows for NS, NB, PE to avoid overlap
       show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
       arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
@@ -1065,7 +1068,7 @@ server <- function(input, output, session) {
   })
   
   # render province vaccine map for overview tab with dynamic width
-  output$ui_plot_choropleth_overview_vaccine_partial_pct <- renderUI({
+  output$ui_plot_choropleth_overview_vaccine_at_least_one_dose <- renderUI({
     
     ### don't run without inputs defined
     req(input$screen_width)
@@ -1073,8 +1076,8 @@ server <- function(input, output, session) {
     ### render plot
     fluidRow(
       column(
-        h4(textOutput("title_choropleth_overview_vaccine_partial_pct")),
-        plotlyOutput("plot_choropleth_overview_vaccine_partial_pct",
+        h4(textOutput("title_choropleth_overview_vaccine_at_least_one_dose")),
+        plotlyOutput("plot_choropleth_overview_vaccine_at_least_one_dose",
                      ### max width of plot = 600px
                      ### scale so plot doesn't overflow screen at small widths
                      width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
@@ -2255,8 +2258,8 @@ server <- function(input, output, session) {
     
   })
   
-  ## percent partially vaccinated data
-  data_partially_vaccinated <- reactive({
+  ## percent at least one dose vaccinated data
+  data_at_least_one_dose <- reactive({
     
     ### don't run without inputs defined
     req(input$prov, input$date_range)
@@ -2276,8 +2279,8 @@ server <- function(input, output, session) {
       group_by(date_vaccine, province_short) %>%
       summarize(across(everything(), sum), .groups = "drop") %>% 
       mutate(
-        part_vaxx = 100 * cumulative_avaccine / pop,
-        lab_percent = paste0(formatC(part_vaxx, format = "f", digit = 2), "%")
+        at_least_one_dose_vaxx = 100 * cumulative_avaccine / pop,
+        lab_percent = paste0(formatC(at_least_one_dose_vaxx, format = "f", digit = 2), "%")
       ) %>% 
       ungroup() %>% 
       group_by(province_short) %>% 
@@ -2286,34 +2289,34 @@ server <- function(input, output, session) {
   })
   
   ## percent fully vaccinated title
-  output$title_partially_vaccinated <- renderText({
+  output$title_at_least_one_dose <- renderText({
     
     ### don't run without inputs defined
     req(input$prov)
     
     if (input$prov != "all") {
-      paste("Percent partially vaccinated in", input$prov)
+      paste("Percent with at least one dose in", input$prov)
     } else {
-      "Percent partially vaccinated in Canada"
+      "Percent with at least one dose in Canada"
     }
     
   })
   
   ## percent partially vaccinated plot
-  output$plot_partially_vaccinated <- renderPlotly({
+  output$plot_at_least_one_dose <- renderPlotly({
     
     ### don't run without inputs defined
     req(input$prov, input$date_range)
     
     ### get merged vaccine data
-    dat <- data_partially_vaccinated()
+    dat <- data_at_least_one_dose()
     
     ### plot data
     dat %>%
       plot_ly() %>%
       add_trace(
         x = ~ province_short,
-        y = ~ part_vaxx,
+        y = ~ at_least_one_dose_vaxx,
         type = "bar",
         color = ~ province_short,
         colors = palette_province_short,
@@ -2333,8 +2336,6 @@ server <- function(input, output, session) {
              modeBarButtonsToRemove = plotly_buttons)
     
   })
-  
-  
   
   ## percent fully vaccinated data
   data_fully_vaccinated <- reactive({
