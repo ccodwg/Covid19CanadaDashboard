@@ -526,6 +526,273 @@ server <- function(input, output, session) {
     )
   })
   
+  
+  
+  
+  # title for province case map for overview tab
+  output$title_choropleth_overview_deaths <- renderText({
+    
+    ### don't run without inputs defined
+    req(input$window_choropleth_overview_deaths)
+    
+    ### render text
+    paste("Reported deaths by province/territory in the last", input$window_choropleth_overview_deaths, "days")
+  })
+  
+  # province case map for overview tab
+  output$plot_choropleth_overview_deaths <- renderPlotly({
+    
+    ### don't run without inputs defined
+    req(input$window_choropleth_overview_deaths)
+    
+    ### join provincial case numbers for relevant window to provincial map
+    dat <- geo_prov_simple %>%
+      left_join(
+        data_ts_mortality() %>%
+          select(province_short, deaths) %>%
+          group_by(province_short) %>%
+          slice_tail(n = input$window_choropleth_overview_deaths) %>%
+          summarize(deaths = sum(deaths), .groups = "drop"),
+        by = "province_short"
+      )
+    
+    ### even out colour scale by rooting case numbers
+    dat <- dat %>%
+      mutate(cases_colour = deaths^(1/3))
+    
+    ### define value labels
+    labs <- data.frame(
+      province_short = dat[["province_short"]],
+      x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      lab_cases = format(dat[["deaths"]], big.mark = ",", trim = TRUE),
+      ### arrows for NS, NB, PE to avoid overlap
+      show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
+      arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      stringsAsFactors = FALSE
+    )
+    
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
+    
+    ### plot data
+    plot_ly() %>%
+      add_sf(
+        data = dat,
+        type = "scatter",
+        split = ~ province,
+        color = ~ cases_colour,
+        colors = "Reds",
+        stroke = I("#000000"),
+        span = I(1.5),
+        hoverinfo = "none"
+      ) %>%
+      add_annotations(
+        data = labs,
+        x = ~ x,
+        y = ~ y,
+        text = ~ lab_cases,
+        hoverinfo = "text",
+        hovertext = paste0(labs$province_short, ": ", labs$lab_cases),
+        font = list(color = "black", size = 14),
+        bgcolor = "white",
+        bordercolor = "black",
+        showarrow = ~ show_arrow,
+        ax = ~ arrow_x,
+        ay = ~ arrow_y,
+        axref = "x",
+        ayref = "y"
+      ) %>%
+      layout(
+        xaxis = axis_hide,
+        yaxis = axis_hide,
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             ### hide all plotly buttons, since they do nothing here
+             displayModeBar = FALSE) %>%
+      hide_colorbar()
+  })
+  
+  # render province case map for overview tab with dynamic width
+  output$ui_plot_choropleth_overview_deaths <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width, input$window_choropleth_overview_deaths)
+    
+    ### render plot
+    fluidRow(
+      column(
+        h4(textOutput("title_choropleth_overview_deaths")),
+        plotlyOutput("plot_choropleth_overview_deaths",
+                     ### max width of plot = 600px
+                     ### scale so plot doesn't overflow screen at small widths
+                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+  
+  # render province case map slider
+  output$ui_window_choropleth_overview_deaths <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width)
+    
+    ### render UI
+    fluidRow(
+      column(
+        sliderInput(
+          "window_choropleth_overview_deaths",
+          "Show how many days?",
+          min = 7,
+          max = data_ts_mortality() %>% pull(date_death_report) %>% unique %>% length,
+          step = 1,
+          value = 14
+        ),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+  
+  
+  
+  
+  # title for province case map for overview tab
+  output$title_choropleth_overview_recovered <- renderText({
+    
+    ### don't run without inputs defined
+    req(input$window_choropleth_overview_recovered)
+    
+    ### render text
+    paste("Reported recovered cases by province/territory in the last", input$window_choropleth_overview_recovered, "days")
+  })
+  
+  # province case map for overview tab
+  output$plot_choropleth_overview_recovered <- renderPlotly({
+    
+    ### don't run without inputs defined
+    req(input$window_choropleth_overview_recovered)
+    
+    ### join provincial case numbers for relevant window to provincial map
+    dat <- geo_prov_simple %>%
+      left_join(
+        data_ts_recovered() %>%
+          select(province_short, recovered) %>%
+          group_by(province_short) %>%
+          slice_tail(n = input$window_choropleth_overview_recovered) %>%
+          summarize(recovered = sum(recovered), .groups = "drop"),
+        by = "province_short"
+      )
+    
+    ### even out colour scale by rooting case numbers
+    dat <- dat %>%
+      mutate(cases_colour = recovered^(1/3))
+    
+    ### define value labels
+    labs <- data.frame(
+      province_short = dat[["province_short"]],
+      x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      lab_cases = format(dat[["recovered"]], big.mark = ",", trim = TRUE),
+      ### arrows for NS, NB, PE to avoid overlap
+      show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
+      arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      stringsAsFactors = FALSE
+    )
+    
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
+    
+    ### plot data
+    plot_ly() %>%
+      add_sf(
+        data = dat,
+        type = "scatter",
+        split = ~ province,
+        color = ~ cases_colour,
+        colors = "Reds",
+        stroke = I("#000000"),
+        span = I(1.5),
+        hoverinfo = "none"
+      ) %>%
+      add_annotations(
+        data = labs,
+        x = ~ x,
+        y = ~ y,
+        text = ~ lab_cases,
+        hoverinfo = "text",
+        hovertext = paste0(labs$province_short, ": ", labs$lab_cases),
+        font = list(color = "black", size = 14),
+        bgcolor = "white",
+        bordercolor = "black",
+        showarrow = ~ show_arrow,
+        ax = ~ arrow_x,
+        ay = ~ arrow_y,
+        axref = "x",
+        ayref = "y"
+      ) %>%
+      layout(
+        xaxis = axis_hide,
+        yaxis = axis_hide,
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             ### hide all plotly buttons, since they do nothing here
+             displayModeBar = FALSE) %>%
+      hide_colorbar()
+  })
+  
+  # render province case map for overview tab with dynamic width
+  output$ui_plot_choropleth_overview_recovered <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width, input$window_choropleth_overview_recovered)
+    
+    ### render plot
+    fluidRow(
+      column(
+        h4(textOutput("title_choropleth_overview_recovered")),
+        plotlyOutput("plot_choropleth_overview_recovered",
+                     ### max width of plot = 600px
+                     ### scale so plot doesn't overflow screen at small widths
+                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+  
+  # render province case map slider
+  output$ui_window_choropleth_overview_recovered <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width)
+    
+    ### render UI
+    fluidRow(
+      column(
+        sliderInput(
+          "window_choropleth_overview_recovered",
+          "Show how many days?",
+          min = 7,
+          max = data_ts_recovered() %>% pull(date_recovered) %>% unique %>% length,
+          step = 1,
+          value = 14
+        ),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+  
+  
+  
+  
   # title for province vaccine map for overview tab
   output$title_choropleth_overview_vaccine_administration <- renderText({
     

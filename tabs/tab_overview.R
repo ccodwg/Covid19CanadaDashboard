@@ -39,40 +39,55 @@ tab_overview <- tabItem(tabName = "tab_overview",
                               tabsetPanel(
                                 tabPanel(
                                   "EpiView",
-                                  uiOutput("ui_plot_choropleth_overview_cases"),
-                                  uiOutput("ui_window_choropleth_overview_cases"),
+                                  tabsetPanel(
+                                    type = "tabs",
+                                    tabPanel(
+                                      "Cases",
+                                      uiOutput("ui_plot_choropleth_overview_cases"),
+                                      uiOutput("ui_window_choropleth_overview_cases"),
+                                    ),
+                                    tabPanel(
+                                      "Deaths",
+                                      uiOutput("ui_plot_choropleth_overview_deaths"),
+                                      uiOutput("ui_window_choropleth_overview_deaths"),
+                                    ),
+                                    tabPanel(
+                                      "Recovered",
+                                      uiOutput("ui_plot_choropleth_overview_recovered"),
+                                      uiOutput("ui_window_choropleth_overview_recovered"),
+                                    )
+                                  )
                                 ),
                                 tabPanel(
                                   "VaxView",
                                   tabsetPanel(
                                     type = "tabs",
                                     tabPanel(
-                                      "Vaccine administration",
+                                      "Vaccine Administration",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_administration"),
                                       uiOutput("ui_window_choropleth_overview_vaccine_administration"),
                                     ),
                                     tabPanel(
-                                      "Vaccine distribution",
+                                      "Vaccine Distribution",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_distribution"),
                                       uiOutput("ui_window_choropleth_overview_vaccine_distribution"),
                                     ),
                                     tabPanel(
-                                      "% Vaccines administered/total distributed",
+                                      "% Vaccines Administered per Total Distribution",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_admin_pct"),
                                       uiOutput("ui_window_choropleth_overview_vaccine_admin_pct"),
                                     ),
                                     tabPanel(
-                                      "% At least one dose",
-                                      uiOutput("ui_plot_choropleth_overview_vaccine_at_least_one_dose"),
-                                      uiOutput("ui_window_choropleth_overview_vaccine_at_least_one_dose"),
+                                      "% Partially Vaccinated",
+                                      uiOutput("ui_plot_choropleth_overview_vaccine_partial_pct"),
+                                      uiOutput("ui_window_choropleth_overview_vaccine_partial_pct"),
                                     ),
                                     tabPanel(
-                                      "% fully vaccinated",
+                                      "% Fully Vaccinated",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_full_pct"),
                                       uiOutput("ui_window_choropleth_overview_vaccine_full_pct"),
                                     )
                                   ))),
-                              HTML("<br>"), # blank line
                                 tabsetPanel(
                                   type = "tabs",
                                   tabPanel(
