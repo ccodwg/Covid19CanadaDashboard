@@ -529,7 +529,7 @@ server <- function(input, output, session) {
   
   
   
-  # title for province case map for overview tab
+  # title for province death map for overview tab
   output$title_choropleth_overview_deaths <- renderText({
     
     ### don't run without inputs defined
@@ -539,13 +539,13 @@ server <- function(input, output, session) {
     paste("Reported deaths by province/territory in the last", input$window_choropleth_overview_deaths, "days")
   })
   
-  # province case map for overview tab
+  # province death map for overview tab
   output$plot_choropleth_overview_deaths <- renderPlotly({
     
     ### don't run without inputs defined
     req(input$window_choropleth_overview_deaths)
     
-    ### join provincial case numbers for relevant window to provincial map
+    ### join provincial death numbers for relevant window to provincial map
     dat <- geo_prov_simple %>%
       left_join(
         data_ts_mortality() %>%
@@ -556,7 +556,7 @@ server <- function(input, output, session) {
         by = "province_short"
       )
     
-    ### even out colour scale by rooting case numbers
+    ### even out colour scale by rooting death numbers
     dat <- dat %>%
       mutate(cases_colour = deaths^(1/3))
     
@@ -615,7 +615,7 @@ server <- function(input, output, session) {
       hide_colorbar()
   })
   
-  # render province case map for overview tab with dynamic width
+  # render province death map for overview tab with dynamic width
   output$ui_plot_choropleth_overview_deaths <- renderUI({
     
     ### don't run without inputs defined
@@ -635,7 +635,7 @@ server <- function(input, output, session) {
     )
   })
   
-  # render province case map slider
+  # render province death map slider
   output$ui_window_choropleth_overview_deaths <- renderUI({
     
     ### don't run without inputs defined
@@ -658,10 +658,7 @@ server <- function(input, output, session) {
     )
   })
   
-  
-  
-  
-  # title for province case map for overview tab
+  # title for province recovered map for overview tab
   output$title_choropleth_overview_recovered <- renderText({
     
     ### don't run without inputs defined
@@ -671,13 +668,13 @@ server <- function(input, output, session) {
     paste("Reported recovered cases by province/territory in the last", input$window_choropleth_overview_recovered, "days")
   })
   
-  # province case map for overview tab
+  # province recovered map for overview tab
   output$plot_choropleth_overview_recovered <- renderPlotly({
     
     ### don't run without inputs defined
     req(input$window_choropleth_overview_recovered)
     
-    ### join provincial case numbers for relevant window to provincial map
+    ### join provincial recovered numbers for relevant window to provincial map
     dat <- geo_prov_simple %>%
       left_join(
         data_ts_recovered() %>%
@@ -688,7 +685,7 @@ server <- function(input, output, session) {
         by = "province_short"
       )
     
-    ### even out colour scale by rooting case numbers
+    ### even out colour scale by rooting recovered numbers
     dat <- dat %>%
       mutate(cases_colour = recovered^(1/3))
     
@@ -747,7 +744,7 @@ server <- function(input, output, session) {
       hide_colorbar()
   })
   
-  # render province case map for overview tab with dynamic width
+  # render province recovered map for overview tab with dynamic width
   output$ui_plot_choropleth_overview_recovered <- renderUI({
     
     ### don't run without inputs defined
@@ -767,7 +764,7 @@ server <- function(input, output, session) {
     )
   })
   
-  # render province case map slider
+  # render province case recovered slider
   output$ui_window_choropleth_overview_recovered <- renderUI({
     
     ### don't run without inputs defined
@@ -789,9 +786,6 @@ server <- function(input, output, session) {
       )
     )
   })
-  
-  
-  
   
   # title for province vaccine map for overview tab
   output$title_choropleth_overview_vaccine_administration <- renderText({
@@ -2466,20 +2460,23 @@ server <- function(input, output, session) {
     
     ### merge data
     dat <- data_ts_vaccine_administration() %>%
-        rename(date_vaccine = date_vaccine_administered) %>%
-        select(province, date_vaccine, cumulative_avaccine) %>%
-      replace_na(list(cumulative_avaccine = 0)) # 2020-12-13 is NA for avaccine
+      rename(date_vaccine = date_vaccine_administered) %>%
+      left_join(data_ts_vaccine_completion(),
+                by = c("date_vaccine" = "date_vaccine_completed", "province" = "province")) %>%
+      select(province, date_vaccine, cumulative_avaccine, cumulative_cvaccine) %>%
+      replace_na(list(cumulative_avaccine = 0,
+                      cumulative_cvaccine = 0)) # 2020-12-13 is NA for avaccine
     
     ### collapse observations into one row per date
     dat %>%
       ### merge short names
       left_join(map_prov %>% select(province, province_short, pop),
                 by = c("province")) %>% 
-      select(date_vaccine, pop, cumulative_avaccine, province_short) %>%
+      select(date_vaccine, pop, cumulative_avaccine, cumulative_cvaccine, province_short) %>%
       group_by(date_vaccine, province_short) %>%
       summarize(across(everything(), sum), .groups = "drop") %>% 
       mutate(
-        at_least_one_dose_vaxx = 100 * cumulative_avaccine / pop,
+        at_least_one_dose_vaxx = 100 * (cumulative_avaccine - cumulative_cvaccine) / pop,
         lab_percent = paste0(formatC(at_least_one_dose_vaxx, format = "f", digit = 2), "%")
       ) %>% 
       ungroup() %>% 
@@ -2523,7 +2520,7 @@ server <- function(input, output, session) {
         hoverinfo = "text",
         hovertext = ~ paste0(
           "Province: ", dat$province_short, "\n",
-          "Partially vaccinated", ": ", dat$cumulative_cvaccine, "\n",
+          "Received at least one dose", ": ", dat$cumulative_cvaccine, "\n",
           "Percent of total population: ", dat$lab_percent
         )
       ) %>% 
@@ -2838,7 +2835,7 @@ server <- function(input, output, session) {
   
   output$title_avaccine_per_capita <- renderText({
     
-    title_daily_cumulative_v2(data_ts_vaccine_administration(), "date_vaccine_administered", "cumulative_avaccine", "doses administered", input_scale = input$scale_comp_avacc, input_plot = input$plot_type_avacc, exclude_repatriated = TRUE, by_province = TRUE)
+    title_daily_cumulative_v2(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "doses administered", input_scale = input$scale_comp_avacc, input_plot = input$plot_type_avacc, exclude_repatriated = TRUE, by_province = TRUE)
   
   })
   
@@ -2867,7 +2864,7 @@ server <- function(input, output, session) {
   
   output$title_dvaccine_per_capita <- renderText({
     
-      title_daily_cumulative_v2(data_ts_vaccine_distribution(), "date_vaccine_distributed", "cumulative_dvaccine", "doses distributed", input_scale = input$scale_comp_dvacc, input_plot = input$plot_type_dvacc, exclude_repatriated = TRUE, by_province = TRUE)
+      title_daily_cumulative_v2(data_ts_vaccine_distribution(), "date_vaccine_distributed", "dvaccine", "doses distributed", input_scale = input$scale_comp_dvacc, input_plot = input$plot_type_dvacc, exclude_repatriated = TRUE, by_province = TRUE)
     
   })
   

@@ -72,11 +72,11 @@ tab_vaccines <- tabItem(tabName = "tab_vaccines",
                                      )
                                      )
                             ),
-                            tabPanel("Percent partially vaccinated",
+                            tabPanel("Percent at least one dose",
                                      fluidRow(box(
-                                       title = textOutput("title_partially_vaccinated"),
+                                       title = textOutput("title_at_least_one_dose"),
                                        width = 12,
-                                       plotlyOutput("plot_partially_vaccinated")
+                                       plotlyOutput("plot_at_least_one_dose")
                                      )
                                      )
                             ),
