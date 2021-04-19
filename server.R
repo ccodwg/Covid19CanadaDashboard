@@ -587,7 +587,7 @@ server <- function(input, output, session) {
         type = "scatter",
         split = ~ province,
         color = ~ cases_colour,
-        colors = "Reds",
+        colors = "Blues",
         stroke = I("#000000"),
         span = I(1.5),
         hoverinfo = "none"
@@ -731,7 +731,7 @@ server <- function(input, output, session) {
         type = "scatter",
         split = ~ province,
         color = ~ cases_colour,
-        colors = "Reds",
+        colors = "Blues",
         stroke = I("#000000"),
         span = I(1.5),
         hoverinfo = "none"
@@ -891,7 +891,7 @@ server <- function(input, output, session) {
         type = "scatter",
         split = ~ province,
         color = ~ cases_colour,
-        colors = "Reds",
+        colors = "Blues",
         stroke = I("#000000"),
         span = I(1.5),
         hoverinfo = "none"
@@ -1035,7 +1035,7 @@ server <- function(input, output, session) {
         type = "scatter",
         split = ~ province,
         color = ~ cases_colour,
-        colors = "Reds",
+        colors = "Blues",
         stroke = I("#000000"),
         span = I(1.5),
         hoverinfo = "none"
@@ -1173,7 +1173,7 @@ server <- function(input, output, session) {
         type = "scatter",
         split = ~ province,
         color = ~ cases_colour,
-        colors = "Reds",
+        colors = "Blues",
         stroke = I("#000000"),
         span = I(1.5),
         hoverinfo = "none"
