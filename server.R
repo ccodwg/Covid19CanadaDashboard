@@ -813,18 +813,20 @@ server <- function(input, output, session) {
   # title for province vaccine map for overview tab
   output$title_choropleth_overview_vaccine_admin_pct <- renderText({
     
-    ### don't run without inputs defined
-    req(input$window_choropleth_overview_vaccine_admin_pct)
+    last_day = data_ts_vaccine_distribution() %>% 
+      pull(date_vaccine_distributed) %>% 
+      max() %>% 
+      format("%b %d, %Y")
     
     ### render text
-    paste("Vaccine doses administered as percentage of vaccines distributed by province/territory in the last", input$window_choropleth_overview_vaccine_admin_pct, "days")
+    paste("Vaccine doses administered as percentage of vaccines distributed by province/territory as of", last_day)
+    
   })
   
   # province vaccine administration map for overview tab
   output$plot_choropleth_overview_vaccine_admin_pct <- renderPlotly({
     
-    ### don't run without inputs defined
-    req(input$window_choropleth_overview_vaccine_admin_pct)
+    max_days = data_ts_vaccine_distribution() %>% pull(date_vaccine_distributed) %>% unique %>% length
     
     ### join provincial vaccine numbers for relevant window to provincial map
     dat <- geo_prov_simple %>%
@@ -832,7 +834,7 @@ server <- function(input, output, session) {
         data_ts_vaccine_distribution() %>%
           select(province_short, dvaccine) %>%
           group_by(province_short) %>%
-          slice_tail(n = input$window_choropleth_overview_vaccine_admin_pct) %>%
+          slice_tail(n = max_days) %>%
           summarize(dvaccine = sum(dvaccine), .groups = "drop"),
         by = "province_short"
       ) %>% 
@@ -840,7 +842,7 @@ server <- function(input, output, session) {
         data_ts_vaccine_administration() %>%
           select(province_short, avaccine) %>%
           group_by(province_short) %>%
-          slice_tail(n = input$window_choropleth_overview_vaccine_admin_pct) %>%
+          slice_tail(n = max_days) %>%
           summarize(avaccine = sum(avaccine), .groups = "drop"),
         by = "province_short"
       ) %>% 
@@ -925,8 +927,8 @@ server <- function(input, output, session) {
   output$ui_plot_choropleth_overview_vaccine_admin_pct <- renderUI({
     
     ### don't run without inputs defined
-    req(input$screen_width, input$window_choropleth_overview_vaccine_admin_pct)
-    
+    req(input$screen_width)
+        
     ### render plot
     fluidRow(
       column(
@@ -941,47 +943,27 @@ server <- function(input, output, session) {
     )
   })
   
-  # render province vaccine map slider
-  output$ui_window_choropleth_overview_vaccine_admin_pct <- renderUI({
-    
-    ### don't run without inputs defined
-    req(input$screen_width)
-    
-    ### render UI
-    fluidRow(
-      column(
-        sliderInput(
-          "window_choropleth_overview_vaccine_admin_pct",
-          "Show how many days?",
-          min = 7,
-          max = data_ts_vaccine_distribution() %>% pull(date_vaccine_distributed) %>% unique %>% length,
-          step = 1,
-          value = data_ts_vaccine_distribution() %>% pull(date_vaccine_distributed) %>% unique %>% length
-        ),
-        width = 12,
-        align = "center"
-      )
-    )
-  })
-  
   
   
   
   # title for province vaccine map for overview tab
-  output$title_choropleth_overview_vaccine_full_pct <- renderText({
-    
-    ### don't run without inputs defined
-    req(input$window_choropleth_overview_vaccine_full_pct)
+  output$title_choropleth_overview_vaccine_partial_pct <- renderText({
+
+    # max_days = data_ts_vaccine_administration() %>% pull(date_vaccine_administered) %>% unique %>% length
+    last_day = data_ts_vaccine_administration() %>% 
+      pull(date_vaccine_administered) %>% 
+      max() %>% 
+      format("%b %d, %Y")
     
     ### render text
-    paste("Percent fully vaccinated by province/territory in the last", input$window_choropleth_overview_vaccine_full_pct, "days")
+    paste("Percent partially vaccinated by province/territory as of", last_day)
+    
   })
   
   # province vaccine administration map for overview tab
-  output$plot_choropleth_overview_vaccine_full_pct <- renderPlotly({
+  output$plot_choropleth_overview_vaccine_partial_pct <- renderPlotly({
     
-    ### don't run without inputs defined
-    req(input$window_choropleth_overview_vaccine_full_pct)
+    max_days = data_ts_vaccine_administration() %>% pull(date_vaccine_administered) %>% unique %>% length
     
     ### join provincial vaccine numbers for relevant window to provincial map
     dat <- geo_prov_simple %>%
@@ -989,7 +971,7 @@ server <- function(input, output, session) {
         data_ts_vaccine_completion() %>%
           select(province_short, cvaccine) %>%
           group_by(province_short) %>%
-          slice_tail(n = input$window_choropleth_overview_vaccine_full_pct) %>%
+          slice_tail(n = max_days) %>%
           summarize(cvaccine = sum(cvaccine), .groups = "drop"),
         by = "province_short"
       ) %>%
@@ -997,13 +979,152 @@ server <- function(input, output, session) {
         data_ts_vaccine_administration() %>%
           select(province_short, avaccine) %>%
           group_by(province_short) %>%
-          slice_tail(n = input$window_choropleth_overview_vaccine_full_pct) %>%
+          slice_tail(n = max_days) %>%
           summarize(avaccine = sum(avaccine), .groups = "drop"),
         by = "province_short"
       ) %>%
       replace_na(list(avaccine = 0,
                       cvaccine = 0)) %>%  # 2020-12-13 is NA for avaccine
       
+      mutate(one_dose = avaccine - cvaccine,
+             pct_partial_vacc = 100 * one_dose / pop,
+             pct_partial_vacc = round(pct_partial_vacc, 2))
+    
+    ### even out colour scale by rooting vaccine numbers
+    dat <- dat %>%
+      mutate(cases_colour = pct_partial_vacc^(1/3))
+    
+    ### define value labels
+    labs <- data.frame(
+      province_short = dat[["province_short"]],
+      x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      lab_cases = format(dat[["pct_partial_vacc"]], big.mark = ",", trim = TRUE),
+      ### arrows for NS, NB, PE to avoid overlap
+      show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
+      arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      stringsAsFactors = FALSE
+    )
+    
+    ### manually nudge some label positions (x = label, ax = arrowhead tail)
+    labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
+    labs[labs$province_short == "MB", "y"] <- labs[labs$province_short == "MB", "y"] + 0.5
+    labs[labs$province_short == "ON", "y"] <- labs[labs$province_short == "ON", "y"] + 0.5
+    labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
+    labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
+    labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
+    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
+    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
+    labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
+    labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
+    labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
+    labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
+    labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
+    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
+    labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
+    labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
+    
+    ### plot data
+    plot_ly() %>%
+      add_sf(
+        data = dat,
+        type = "scatter",
+        split = ~ province,
+        color = ~ cases_colour,
+        colors = "Reds",
+        stroke = I("#000000"),
+        span = I(1.5),
+        hoverinfo = "none"
+      ) %>%
+      add_annotations(
+        data = labs,
+        x = ~ x,
+        y = ~ y,
+        text = ~ lab_cases,
+        hoverinfo = "text",
+        hovertext = paste0(labs$province_short, ": ", labs$lab_cases),
+        font = list(color = "black", size = 14),
+        bgcolor = "white",
+        bordercolor = "black",
+        showarrow = ~ show_arrow,
+        ax = ~ arrow_x,
+        ay = ~ arrow_y,
+        axref = "x",
+        ayref = "y"
+      ) %>%
+      layout(
+        xaxis = axis_hide,
+        yaxis = axis_hide,
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             ### hide all plotly buttons, since they do nothing here
+             displayModeBar = FALSE) %>%
+      hide_colorbar()
+  })
+  
+  # render province vaccine map for overview tab with dynamic width
+  output$ui_plot_choropleth_overview_vaccine_partial_pct <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width)
+    
+    ### render plot
+    fluidRow(
+      column(
+        h4(textOutput("title_choropleth_overview_vaccine_partial_pct")),
+        plotlyOutput("plot_choropleth_overview_vaccine_partial_pct",
+                     ### max width of plot = 600px
+                     ### scale so plot doesn't overflow screen at small widths
+                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+
+  
+  
+  
+  # title for province vaccine map for overview tab
+  output$title_choropleth_overview_vaccine_full_pct <- renderText({
+    
+    last_day = data_ts_vaccine_administration() %>% 
+      pull(date_vaccine_administered) %>% 
+      max() %>% 
+      format("%b %d, %Y")
+    
+    ### render text
+    paste("Percent fully vaccinated by province/territory as of", last_day)
+    
+  })
+    
+  # province vaccine administration map for overview tab
+  output$plot_choropleth_overview_vaccine_full_pct <- renderPlotly({
+    
+    max_days <- data_ts_vaccine_administration() %>% pull(date_vaccine_administered) %>% unique %>% length
+    
+    ### join provincial vaccine numbers for relevant window to provincial map
+    dat <- geo_prov_simple %>%
+      left_join(
+        data_ts_vaccine_completion() %>%
+          select(province_short, cvaccine) %>%
+          group_by(province_short) %>%
+          slice_tail(n = max_days) %>%
+          summarize(cvaccine = sum(cvaccine), .groups = "drop"),
+        by = "province_short"
+      ) %>%
+      left_join(
+        data_ts_vaccine_administration() %>%
+          select(province_short, avaccine) %>%
+          group_by(province_short) %>%
+          slice_tail(n = max_days) %>%
+          summarize(avaccine = sum(avaccine), .groups = "drop"),
+        by = "province_short"
+      ) %>%
+      replace_na(list(avaccine = 0,
+                      cvaccine = 0)) %>%  # 2020-12-13 is NA for avaccine
       mutate(pct_full_vacc = 100 * cvaccine / pop,
              pct_full_vacc = round(pct_full_vacc, 2))
     
@@ -1085,7 +1206,7 @@ server <- function(input, output, session) {
   output$ui_plot_choropleth_overview_vaccine_full_pct <- renderUI({
     
     ### don't run without inputs defined
-    req(input$screen_width, input$window_choropleth_overview_vaccine_full_pct)
+    req(input$screen_width)
     
     ### render plot
     fluidRow(
@@ -1100,30 +1221,7 @@ server <- function(input, output, session) {
       )
     )
   })
-  
-  # render province vaccine map slider
-  output$ui_window_choropleth_overview_vaccine_full_pct <- renderUI({
-    
-    ### don't run without inputs defined
-    req(input$screen_width)
-    
-    ### render UI
-    fluidRow(
-      column(
-        sliderInput(
-          "window_choropleth_overview_vaccine_full_pct",
-          "Show how many days?",
-          min = 7,
-          max = data_ts_vaccine_administration() %>% pull(date_vaccine_administered) %>% unique %>% length,
-          step = 1,
-          value = data_ts_vaccine_administration() %>% pull(date_vaccine_administered) %>% unique %>% length
-        ),
-        width = 12,
-        align = "center"
-      )
-    )
-  })
-  
+
   
   
   
