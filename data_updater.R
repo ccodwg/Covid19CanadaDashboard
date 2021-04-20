@@ -1,5 +1,6 @@
 # load libraries
 library(dplyr)
+library(tidyr)
 library(RJSONIO)
 
 # create data directory, if it doesn't already exist
@@ -63,6 +64,64 @@ hosp <- fromJSON("https://api.covid19tracker.ca/summary/split")$data %>%
 
 # write hospitalization data
 write.csv(hosp, "data/hosp.csv", row.names = FALSE)
+
+
+## VOCs
+phac <- read.csv(
+  "https://health-infobase.canada.ca/src/data/covidLive/covid19-epiSummary-voc.csv",
+  stringsAsFactors = FALSE) %>%
+  ## keep relevant columns
+  select(report_date, prov, b117, b1351, p1) %>%
+  ## rename columns
+  rename(date_report = report_date, province = prov, B117 = b117, B1351 = b1351, P1 = p1) %>%
+  ## convert dates
+  mutate(
+    date_report = as.Date(date_report)
+  ) %>%
+  ## PEI is sometimes named "PE" and sometimes "PEI"; rename "CA" to "Canada"
+  mutate(
+    province = case_when(
+      province == "PEI" ~ "PE",
+      province == "CA" ~ "Canada",
+      TRUE ~ province
+    )
+  ) %>%
+  ## fill in missing dates
+  complete(., expand(., date_report, province), fill = list(B117 = 0, B1351 = 0, P1 = 0)) %>%
+  ## arrange
+  arrange(date_report, province)
+# wide to long for easier plotting
+phac_plot <-
+  pivot_longer(
+    phac,
+    cols = c(B117, B1351, P1),
+    names_to = "variant",
+    values_to = "cumulative_variant_cases"
+  )
+
+phac_plot <- phac_plot %>%
+  group_by(province,variant) %>%
+  arrange(date_report, .by_group = TRUE) %>%
+  mutate(variant_cases = cumulative_variant_cases - lag(cumulative_variant_cases, default = first(cumulative_variant_cases)))
+
+phac_plot$province[phac_plot$province=="AB"] <- "Alberta"
+phac_plot$province[phac_plot$province=="MB"] <- "Manitoba"
+phac_plot$province[phac_plot$province=="NB"] <- "New Brunswick"
+phac_plot$province[phac_plot$province=="NS"] <- "Nova Scotia"
+phac_plot$province[phac_plot$province=="NU"] <- "Nunavut"
+phac_plot$province[phac_plot$province=="NT"] <- "NWT"
+phac_plot$province[phac_plot$province=="ON"] <- "Ontario"
+phac_plot$province[phac_plot$province=="PE"] <- "PEI"
+phac_plot$province[phac_plot$province=="QC"] <- "Quebec"
+phac_plot$province[phac_plot$province=="SK"] <- "Saskatchewan"
+phac_plot$province[phac_plot$province=="YT"] <- "Yukon"
+
+## VOC Date data needs to be in the following format: "%d-%m-%Y"
+phac_plot$date_report <- format(phac_plot$date_report,"%d-%m-%Y")
+
+write.csv(phac_plot[(phac_plot$province!="Canada"),],"data/variants_timeseries_prov.csv", row.names = F)
+write.csv(phac_plot[(phac_plot$province=="Canada"),],"data/variants_timeseries_canada.csv",row.names = F)
+
 
 # delete temporary files
 unlink(temp) # delete GitHub download

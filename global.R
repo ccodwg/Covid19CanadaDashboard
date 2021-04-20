@@ -163,6 +163,7 @@ ts_variants_wide$cumulative_variant_cases <- ts_variants_wide$b117_cumulative_va
 
 ts_variants_wide <- merge(ts_variants_wide, ts_cases[c("province","date_report","cases","cumulative_cases")], by = c("province","date_report"))
 
+ts_variants_wide$cases_adj <- (ts_variants_wide$cases-ts_variants_wide$variant_cases)
 
 ## process case data
 cases <- cases %>%

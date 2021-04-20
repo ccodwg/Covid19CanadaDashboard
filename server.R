@@ -182,7 +182,7 @@ server <- function(input, output, session) {
 
   ## cases time series
   data_ts_variants_prov <- reactive({
-    get_data("ts_variants_prov", "date_report")
+    get_data("ts_variants", "date_report")
   })
   
   ## cases time series
@@ -319,6 +319,53 @@ server <- function(input, output, session) {
                color = colour_box)
   }
   
+  
+  ## function: summary numbers for overview tab
+  valuebox_voc_summary <- function(table_overview, var_cum, var_update, lab_title, colour_box, update_type = c("new", "change"), val_cum_format = c("raw", "million"), font_size_update = "40%") {
+    
+    ### check update type (new or change +/-)
+    match.arg(update_type, c("new", "change", several.ok = FALSE))
+    
+    ### check cumulative value format (raw or millions)
+    match.arg(val_cum_format, c("raw", "million"), several.ok = FALSE)
+    
+    ### calculate values
+    val_cum <- table_overview %>%
+      filter(Province == input$prov) %>%
+      pull(var_cum) %>%
+      {
+        if (val_cum_format == "raw") {
+          formatC(., format = "f", digits = 0, big.mark = ",")
+        } else if (val_cum_format == "million") {
+          paste0(formatC(. / 1000000, digits = 2, format = "f", big.mark = ","), "m")
+        }
+      }
+    val_update <- table_overview %>% filter(Province == "Canada") %>% pull(var_update)
+    
+    ### value box
+    HTML(paste0(
+      tags$p(val_cum, style = "font-size: 95%;"),
+      "<div style='font-size:",
+      font_size_update,
+      "'>(",
+      {if (update_type == "new") {
+        paste0(
+          format(val_update, big.mark = ","),
+          " new)</div>"
+        )
+      } else {
+        paste0(
+          "Change: ",
+          if (val_update >= 0) "+" else "",
+          format(val_update, big.mark = ","),
+          ")</div>"
+        )}})) %>%
+      valueBox(lab_title,
+               color = colour_box)
+  }
+  
+  
+  
   ## cases
   output$value_box_summary_cases <- renderValueBox({
     value_box_summary(table_overview, "Cumulative cases", "Cases (new)", "Reported cases", "orange", update_type = "new", val_cum_format = "raw")
@@ -327,18 +374,21 @@ server <- function(input, output, session) {
   ## VARIANT CASES
   
   ## B117 cases
-  output$value_box_b117_cases <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative B117 Variant Cases", "B117 Variant Cases (new)", "B117 Variant Cases", "blue", update_type = "new", val_cum_format = "raw")
+  output$value_box_b117_cases <- renderValueBox({ 
+    req(input$prov)
+    valuebox_voc_summary(table_overview, "Cumulative B117 Variant Cases", "B117 Variant Cases (new)", "B117 Variant Cases", "blue", update_type = "new", val_cum_format = "raw")
   })
   
   ## B1351 cases
   output$value_box_b1351_cases <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative B1351 Variant Cases", "B1351 Variant Cases (new)", "B1351 Variant Cases", "orange", update_type = "new", val_cum_format = "raw")
+    req(input$prov)
+    valuebox_voc_summary(table_overview, "Cumulative B1351 Variant Cases", "B1351 Variant Cases (new)", "B1351 Variant Cases", "orange", update_type = "new", val_cum_format = "raw")
   })
   
   ## P1 cases
   output$value_box_p1_cases <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative P1 Variant Cases", "P1 Variant Cases (new)", "P1 Variant Cases", "olive", update_type = "new", val_cum_format = "raw")
+    req(input$prov)
+    valuebox_voc_summary(table_overview, "Cumulative P1 Variant Cases", "P1 Variant Cases (new)", "P1 Variant Cases", "olive", update_type = "new", val_cum_format = "raw")
   })
   
   ## active cases
@@ -1236,7 +1286,8 @@ server <- function(input, output, session) {
                 y = ~roll_avg, name = "7-day VOC average") %>%
       layout(yaxis2 = list(overlaying = "y", side = "right")) %>%
       layout(
-        yaxis = list(title = 'Count'),
+        yaxis = list(title = 'Count',
+                     fixedrange= FALSE),
         barmode = 'stack',
         showlegend = TRUE,
         hovermode = "x unified",
@@ -1246,6 +1297,52 @@ server <- function(input, output, session) {
              modeBarButtonsToRemove = plotly_buttons)
   }
 
+  
+  ## function: daily numbers plot
+  plot_cases_voc <- function(fun_data, var_date, all_variant, non_voc, lab_x, lab_y) {
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range)
+    
+    ### get data
+    dat <- fun_data
+    
+    ### if no matching data, return blank plot
+    if (sum(dat[, all_variant]) == 0) {
+      return(plot_no_data())
+    }
+    
+    ### transform data
+    
+    dat <- dat %>% filter(!!sym(var_date) != "2021-02-03") %>%
+      ### aggregate values so that one date = one row to ensure correct plotting of bars
+      select(!!sym(var_date),!!sym(all_variant),!!sym(non_voc)) %>%
+      group_by(!!sym(var_date)) %>%
+      summarize(!!sym(all_variant) := sum(!!sym(all_variant)),
+                !!sym(non_voc) := sum(!!sym(non_voc)),
+                .groups = "drop") %>%
+      ### calculate rolling average
+      mutate(rollavg_voc = rollapply(!!sym(all_variant), 7, mean, align = "right", partial = TRUE),
+             rollavg_nonvoc = rollapply(!!sym(non_voc), 7, mean, align = "right", partial = TRUE)) 
+    
+    ### plot data
+    dat %>%
+      plot_ly(x = as.formula(paste("~", var_date)),
+              y = ~rollavg_nonvoc,
+              type = "scatter",mode = 'none', fill = 'tozeroy', name = "Total Daily Cases",fillcolor = 'rgba(169, 169, 169, 0.7)'
+      ) %>%
+      add_trace(x = as.formula(paste("~",var_date)),
+                y = ~rollavg_voc, mode = 'none', fill = 'tozeroy', fillcolor = 'rgba(139, 0, 0, 1)',name = "Daily VOCs"
+      ) %>%
+      layout(
+        yaxis = list(title = 'Count'),
+        showlegend = TRUE,
+        hovermode = "x unified",
+        legend = plotly_legend
+      ) %>%
+      config(displaylogo = FALSE,
+             modeBarButtonsToRemove = plotly_buttons)
+  }
   
   ## function: cumulative numbers plot
   plot_cumulative <- function(fun_data, var_date, var_val, lab_x, lab_y) {
@@ -1302,13 +1399,18 @@ server <- function(input, output, session) {
     plot_daily(data_ts_cases(), "date_report", "cases", "Report date", "Daily reported cases")
   })
 
+  ## VOC trend overview plot
+  output$title_daily_voc <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "variant_cases", "7-day Rolling Reported Cases and VOCs")})
+  output$plot_daily_voc <- renderPlotly({
+    plot_cases_voc(data_ts_variants_total(), "date_report","variant_cases","cases", "Report Date", "Daily Reported VOC Cases")
+  })
 
   ## daily numbers: variant cases by type
   output$title_daily_variant_type <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "variant_cases", "Daily Reported VOC Cases & 7-day Rolling VOC Average")})
   output$plot_daily_variant_type <- renderPlotly({
     plot_variant_daily(data_ts_variants_total(), "date_report","variant_cases","b117_variant_cases","b1351_variant_cases","p1_variant_cases", "Report Date", "Daily Reported VOC Cases")
   })
-  
+
   ## daily numbers: B117 variant cases
   output$title_daily_b117_variants <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "b117_variant_cases", "Daily Reported Cases", exclude_repatriated = TRUE, by_province = TRUE)})
   output$plot_daily_b117_variants <- renderPlotly({
