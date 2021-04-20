@@ -19,6 +19,7 @@ library(zoo)
 library(sf)
 library(rvest)
 library(RJSONIO)
+library(mgcv)
 
 ## data visualization
 library(ggplot2)
