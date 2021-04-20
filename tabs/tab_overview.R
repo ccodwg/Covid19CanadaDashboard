@@ -39,30 +39,79 @@ tab_overview <- tabItem(tabName = "tab_overview",
                               tabsetPanel(
                                 tabPanel(
                                   "EpiView",
-                                  uiOutput("ui_plot_choropleth_overview_cases"),
-                                  uiOutput("ui_window_choropleth_overview_cases"),
+                                  tabsetPanel(
+                                    type = "tabs",
+                                    tabPanel(
+                                      "Cases",
+                                      uiOutput("ui_plot_choropleth_overview_cases"),
+                                      uiOutput("ui_window_choropleth_overview_cases"),
+                                    ),
+                                    tabPanel(
+                                      "Deaths",
+                                      uiOutput("ui_plot_choropleth_overview_deaths"),
+                                      uiOutput("ui_window_choropleth_overview_deaths"),
+                                    ),
+                                    tabPanel(
+                                      "Recovered",
+                                      uiOutput("ui_plot_choropleth_overview_recovered"),
+                                      uiOutput("ui_window_choropleth_overview_recovered"),
+                                    )
+                                  )
                                 ),
                                 tabPanel(
                                   "VaxView",
-                                  uiOutput("ui_plot_choropleth_overview_vaccine_administration"),
-                                  uiOutput("ui_window_choropleth_overview_vaccine_administration"),
-                                )
-                              ),
-                              tabsetPanel(
-                                type = "tabs",
-                                tabPanel(
-                                  "Cases",
-                                  fluidRow(box(
-                                    title = textOutput("title_flattening_cases"),
-                                    plotlyOutput("plot_flattening_cases"),
-                                    width = 12))
+                                  tabsetPanel(
+                                    type = "tabs",
+                                    tabPanel(
+                                      "Vaccine administration",
+                                      uiOutput("ui_plot_choropleth_overview_vaccine_administration"),
+                                      uiOutput("ui_window_choropleth_overview_vaccine_administration"),
+                                    ),
+                                    tabPanel(
+                                      "Vaccine distribution",
+                                      uiOutput("ui_plot_choropleth_overview_vaccine_distribution"),
+                                      uiOutput("ui_window_choropleth_overview_vaccine_distribution"),
+                                    ),
+                                    tabPanel(
+                                      "% Vaccines administered from total distribution",
+                                      uiOutput("ui_plot_choropleth_overview_vaccine_admin_pct"),
+                                      uiOutput("ui_window_choropleth_overview_vaccine_admin_pct"),
+                                    ),
+                                    tabPanel(
+                                      "% At least one dose",
+                                      uiOutput("ui_plot_choropleth_overview_vaccine_at_least_one_dose"),
+                                      uiOutput("ui_window_choropleth_overview_vaccine_at_least_one_dose"),
+                                    ),
+                                    tabPanel(
+                                      "% Fully vaccinated",
+                                      uiOutput("ui_plot_choropleth_overview_vaccine_full_pct"),
+                                      uiOutput("ui_window_choropleth_overview_vaccine_full_pct"),
+                                    )
+                                  ))),
+                              HTML("<br>"), # blank line
+                                tabsetPanel(
+                                  type = "tabs",
+                                  tabPanel(
+                                    "Cases",
+                                    fluidRow(box(
+                                      title = textOutput("title_flattening_cases"),
+                                      plotlyOutput("plot_flattening_cases"),
+                                      width = 12))
                                   ),
-                                tabPanel(
-                                  "Mortality",
-                                  fluidRow(box(
-                                    title = textOutput("title_flattening_mortality"),
-                                    plotlyOutput("plot_flattening_mortality"),
-                                    width = 12))
+                                  tabPanel(
+                                    "Mortality",
+                                    fluidRow(box(
+                                      title = textOutput("title_flattening_mortality"),
+                                      plotlyOutput("plot_flattening_mortality"),
+                                      width = 12))
+                                  ),
+                                  tabPanel(
+                                    "Daily doses administered",
+                                    fluidRow(box(
+                                      title = textOutput("title_flattening_avaccine"),
+                                      plotlyOutput("plot_flattening_avaccine"),
+                                      width = 12))
+                                )
                                 )
                               ),
                               box(
@@ -80,6 +129,6 @@ tab_overview <- tabItem(tabName = "tab_overview",
                               tags$p(""), # blank line
                               htmlOutput({"text_flattening"}),
                               tags$p(""), # blank line
-                        fluidRow(DTOutput("table_prov_overview"))),
+                        fluidRow(DTOutput("table_prov_overview")),
                         "RP = repatriated travellers."
                         )

@@ -374,6 +374,29 @@ server <- function(input, output, session) {
     value_box_summary(table_overview, "Cumulative testing", "Testing (new)", "Total testing", "olive", update_type = "new", val_cum_format = "million")
   })
   
+  # label nudger for overview tab choropleth maps
+  choropleth_label_nudger <- function(labs) {
+    
+    ### manually nudge some label positions (x = label, ax = arrowhead tail)
+    labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
+    labs[labs$province_short == "MB", "y"] <- labs[labs$province_short == "MB", "y"] + 0.5
+    labs[labs$province_short == "ON", "y"] <- labs[labs$province_short == "ON", "y"] + 0.5
+    labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
+    labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
+    labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
+    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
+    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
+    labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
+    labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
+    labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
+    labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
+    labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
+    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
+    labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
+    labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
+    labs
+  }
+  
   # title for province case map for overview tab
   output$title_choropleth_overview_cases <- renderText({
     
@@ -418,23 +441,8 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
     
-    ### manually nudge some label positions (x = label, ax = arrowhead tail)
-    labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
-    labs[labs$province_short == "MB", "y"] <- labs[labs$province_short == "MB", "y"] + 0.5
-    labs[labs$province_short == "ON", "y"] <- labs[labs$province_short == "ON", "y"] + 0.5
-    labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
-    labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
-    labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
-    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
-    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
-    labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
-    labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
-    labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
-    labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
-    labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
-    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
-    labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
-    labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
     
     ### plot data
     plot_ly() %>%
@@ -518,6 +526,267 @@ server <- function(input, output, session) {
     )
   })
   
+  
+  
+  
+  # title for province death map for overview tab
+  output$title_choropleth_overview_deaths <- renderText({
+    
+    ### don't run without inputs defined
+    req(input$window_choropleth_overview_deaths)
+    
+    ### render text
+    paste("Reported deaths by province/territory in the last", input$window_choropleth_overview_deaths, "days")
+  })
+  
+  # province death map for overview tab
+  output$plot_choropleth_overview_deaths <- renderPlotly({
+    
+    ### don't run without inputs defined
+    req(input$window_choropleth_overview_deaths)
+    
+    ### join provincial death numbers for relevant window to provincial map
+    dat <- geo_prov_simple %>%
+      left_join(
+        data_ts_mortality() %>%
+          select(province_short, deaths) %>%
+          group_by(province_short) %>%
+          slice_tail(n = input$window_choropleth_overview_deaths) %>%
+          summarize(deaths = sum(deaths), .groups = "drop"),
+        by = "province_short"
+      )
+    
+    ### even out colour scale by rooting death numbers
+    dat <- dat %>%
+      mutate(cases_colour = deaths^(1/3))
+    
+    ### define value labels
+    labs <- data.frame(
+      province_short = dat[["province_short"]],
+      x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      lab_cases = format(dat[["deaths"]], big.mark = ",", trim = TRUE),
+      ### arrows for NS, NB, PE to avoid overlap
+      show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
+      arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      stringsAsFactors = FALSE
+    )
+    
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
+    
+    ### plot data
+    plot_ly() %>%
+      add_sf(
+        data = dat,
+        type = "scatter",
+        split = ~ province,
+        color = ~ cases_colour,
+        colors = "Reds",
+        stroke = I("#000000"),
+        span = I(1.5),
+        hoverinfo = "none"
+      ) %>%
+      add_annotations(
+        data = labs,
+        x = ~ x,
+        y = ~ y,
+        text = ~ lab_cases,
+        hoverinfo = "text",
+        hovertext = paste0(labs$province_short, ": ", labs$lab_cases),
+        font = list(color = "black", size = 14),
+        bgcolor = "white",
+        bordercolor = "black",
+        showarrow = ~ show_arrow,
+        ax = ~ arrow_x,
+        ay = ~ arrow_y,
+        axref = "x",
+        ayref = "y"
+      ) %>%
+      layout(
+        xaxis = axis_hide,
+        yaxis = axis_hide,
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             ### hide all plotly buttons, since they do nothing here
+             displayModeBar = FALSE) %>%
+      hide_colorbar()
+  })
+  
+  # render province death map for overview tab with dynamic width
+  output$ui_plot_choropleth_overview_deaths <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width, input$window_choropleth_overview_deaths)
+    
+    ### render plot
+    fluidRow(
+      column(
+        h4(textOutput("title_choropleth_overview_deaths")),
+        plotlyOutput("plot_choropleth_overview_deaths",
+                     ### max width of plot = 600px
+                     ### scale so plot doesn't overflow screen at small widths
+                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+  
+  # render province death map slider
+  output$ui_window_choropleth_overview_deaths <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width)
+    
+    ### render UI
+    fluidRow(
+      column(
+        sliderInput(
+          "window_choropleth_overview_deaths",
+          "Show how many days?",
+          min = 7,
+          max = data_ts_mortality() %>% pull(date_death_report) %>% unique %>% length,
+          step = 1,
+          value = 14
+        ),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+  
+  # title for province recovered map for overview tab
+  output$title_choropleth_overview_recovered <- renderText({
+    
+    ### don't run without inputs defined
+    req(input$window_choropleth_overview_recovered)
+    
+    ### render text
+    paste("Reported recovered cases by province/territory in the last", input$window_choropleth_overview_recovered, "days")
+  })
+  
+  # province recovered map for overview tab
+  output$plot_choropleth_overview_recovered <- renderPlotly({
+    
+    ### don't run without inputs defined
+    req(input$window_choropleth_overview_recovered)
+    
+    ### join provincial recovered numbers for relevant window to provincial map
+    dat <- geo_prov_simple %>%
+      left_join(
+        data_ts_recovered() %>%
+          select(province_short, recovered) %>%
+          group_by(province_short) %>%
+          slice_tail(n = input$window_choropleth_overview_recovered) %>%
+          summarize(recovered = sum(recovered), .groups = "drop"),
+        by = "province_short"
+      )
+    
+    ### even out colour scale by rooting recovered numbers
+    dat <- dat %>%
+      mutate(cases_colour = recovered^(1/3))
+    
+    ### define value labels
+    labs <- data.frame(
+      province_short = dat[["province_short"]],
+      x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      lab_cases = format(dat[["recovered"]], big.mark = ",", trim = TRUE),
+      ### arrows for NS, NB, PE to avoid overlap
+      show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
+      arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      stringsAsFactors = FALSE
+    )
+    
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
+    
+    ### plot data
+    plot_ly() %>%
+      add_sf(
+        data = dat,
+        type = "scatter",
+        split = ~ province,
+        color = ~ cases_colour,
+        colors = "Reds",
+        stroke = I("#000000"),
+        span = I(1.5),
+        hoverinfo = "none"
+      ) %>%
+      add_annotations(
+        data = labs,
+        x = ~ x,
+        y = ~ y,
+        text = ~ lab_cases,
+        hoverinfo = "text",
+        hovertext = paste0(labs$province_short, ": ", labs$lab_cases),
+        font = list(color = "black", size = 14),
+        bgcolor = "white",
+        bordercolor = "black",
+        showarrow = ~ show_arrow,
+        ax = ~ arrow_x,
+        ay = ~ arrow_y,
+        axref = "x",
+        ayref = "y"
+      ) %>%
+      layout(
+        xaxis = axis_hide,
+        yaxis = axis_hide,
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             ### hide all plotly buttons, since they do nothing here
+             displayModeBar = FALSE) %>%
+      hide_colorbar()
+  })
+  
+  # render province recovered map for overview tab with dynamic width
+  output$ui_plot_choropleth_overview_recovered <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width, input$window_choropleth_overview_recovered)
+    
+    ### render plot
+    fluidRow(
+      column(
+        h4(textOutput("title_choropleth_overview_recovered")),
+        plotlyOutput("plot_choropleth_overview_recovered",
+                     ### max width of plot = 600px
+                     ### scale so plot doesn't overflow screen at small widths
+                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+  
+  # render province case recovered slider
+  output$ui_window_choropleth_overview_recovered <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width)
+    
+    ### render UI
+    fluidRow(
+      column(
+        sliderInput(
+          "window_choropleth_overview_recovered",
+          "Show how many days?",
+          min = 7,
+          max = data_ts_recovered() %>% pull(date_recovered) %>% unique %>% length,
+          step = 1,
+          value = 14
+        ),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+  
   # title for province vaccine map for overview tab
   output$title_choropleth_overview_vaccine_administration <- renderText({
     
@@ -562,23 +831,8 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
     
-    ### manually nudge some label positions (x = label, ax = arrowhead tail)
-    labs[labs$province_short == "AB", "y"] <- labs[labs$province_short == "AB", "y"] + 0.5
-    labs[labs$province_short == "MB", "y"] <- labs[labs$province_short == "MB", "y"] + 0.5
-    labs[labs$province_short == "ON", "y"] <- labs[labs$province_short == "ON", "y"] + 0.5
-    labs[labs$province_short == "BC", "x"] <- labs[labs$province_short == "BC", "x"] + 0.5
-    labs[labs$province_short == "BC", "y"] <- labs[labs$province_short == "BC", "y"] - 2.5
-    labs[labs$province_short == "SK", "y"] <- labs[labs$province_short == "SK", "y"] - 2.5
-    labs[labs$province_short == "NL", "x"] <- labs[labs$province_short == "NL", "x"] + 4
-    labs[labs$province_short == "NL", "y"] <- labs[labs$province_short == "NL", "y"]
-    labs[labs$province_short == "NU", "x"] <- labs[labs$province_short == "NU", "x"] - 7
-    labs[labs$province_short == "NU", "y"] <- labs[labs$province_short == "NU", "y"] - 6
-    labs[labs$province_short == "NT", "y"] <- labs[labs$province_short == "NT", "y"] - 2
-    labs[labs$province_short == "YT", "y"] <- labs[labs$province_short == "YT", "y"] - 0.5
-    labs[labs$province_short == "PE", "arrow_y"] <- labs[labs$province_short == "PE", "y"] + 3
-    labs[labs$province_short == "NB", "arrow_x"] <- labs[labs$province_short == "NB", "x"] - 5
-    labs[labs$province_short == "NS", "arrow_x"] <- labs[labs$province_short == "NS", "x"] + 7
-    labs[labs$province_short == "NS", "arrow_y"] <- labs[labs$province_short == "NS", "y"] - 1
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
     
     ### plot data
     plot_ly() %>%
@@ -587,7 +841,7 @@ server <- function(input, output, session) {
         type = "scatter",
         split = ~ province,
         color = ~ cases_colour,
-        colors = "Reds",
+        colors = "Blues",
         stroke = I("#000000"),
         span = I(1.5),
         hoverinfo = "none"
@@ -661,6 +915,512 @@ server <- function(input, output, session) {
       )
     )
   })
+  
+  # title for province vaccine map for overview tab
+  output$title_choropleth_overview_vaccine_distribution <- renderText({
+    
+    ### don't run without inputs defined
+    req(input$window_choropleth_overview_vaccine_distribution)
+    
+    ### render text
+    paste("Vaccine doses distributed by province/territory in the last", input$window_choropleth_overview_vaccine_distribution, "days")
+  })
+  
+  # province vaccine administration map for overview tab
+  output$plot_choropleth_overview_vaccine_distribution <- renderPlotly({
+    
+    ### don't run without inputs defined
+    req(input$window_choropleth_overview_vaccine_distribution)
+    
+    ### join provincial vaccine numbers for relevant window to provincial map
+    dat <- geo_prov_simple %>%
+      left_join(
+        data_ts_vaccine_distribution() %>%
+          select(province_short, dvaccine) %>%
+          group_by(province_short) %>%
+          slice_tail(n = input$window_choropleth_overview_vaccine_distribution) %>%
+          summarize(dvaccine = sum(dvaccine), .groups = "drop"),
+        by = "province_short"
+      )
+    
+    ### even out colour scale by rooting vaccine numbers
+    dat <- dat %>%
+      mutate(cases_colour = dvaccine^(1/3))
+    
+    ### define value labels
+    labs <- data.frame(
+      province_short = dat[["province_short"]],
+      x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      lab_cases = format(dat[["dvaccine"]], big.mark = ",", trim = TRUE),
+      ### arrows for NS, NB, PE to avoid overlap
+      show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
+      arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      stringsAsFactors = FALSE
+    )
+    
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
+    
+    ### plot data
+    plot_ly() %>%
+      add_sf(
+        data = dat,
+        type = "scatter",
+        split = ~ province,
+        color = ~ cases_colour,
+        colors = "Blues",
+        stroke = I("#000000"),
+        span = I(1.5),
+        hoverinfo = "none"
+      ) %>%
+      add_annotations(
+        data = labs,
+        x = ~ x,
+        y = ~ y,
+        text = ~ lab_cases,
+        hoverinfo = "text",
+        hovertext = paste0(labs$province_short, ": ", labs$lab_cases),
+        font = list(color = "black", size = 14),
+        bgcolor = "white",
+        bordercolor = "black",
+        showarrow = ~ show_arrow,
+        ax = ~ arrow_x,
+        ay = ~ arrow_y,
+        axref = "x",
+        ayref = "y"
+      ) %>%
+      layout(
+        xaxis = axis_hide,
+        yaxis = axis_hide,
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             ### hide all plotly buttons, since they do nothing here
+             displayModeBar = FALSE) %>%
+      hide_colorbar()
+  })
+  
+  # render province vaccine map for overview tab with dynamic width
+  output$ui_plot_choropleth_overview_vaccine_distribution <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width, input$window_choropleth_overview_vaccine_distribution)
+    
+    ### render plot
+    fluidRow(
+      column(
+        h4(textOutput("title_choropleth_overview_vaccine_distribution")),
+        plotlyOutput("plot_choropleth_overview_vaccine_distribution",
+                     ### max width of plot = 600px
+                     ### scale so plot doesn't overflow screen at small widths
+                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+  
+  # render province vaccine map slider
+  output$ui_window_choropleth_overview_vaccine_distribution <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width)
+    
+    ### render UI
+    fluidRow(
+      column(
+        sliderInput(
+          "window_choropleth_overview_vaccine_distribution",
+          "Show how many days?",
+          min = 7,
+          max = data_ts_vaccine_distribution() %>% pull(date_vaccine_distributed) %>% unique %>% length,
+          step = 1,
+          value = data_ts_vaccine_distribution() %>% pull(date_vaccine_distributed) %>% unique %>% length
+        ),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+
+  
+  
+  
+  
+  # title for province vaccine map for overview tab
+  output$title_choropleth_overview_vaccine_admin_pct <- renderText({
+    
+    last_day = data_ts_vaccine_distribution() %>% 
+      pull(date_vaccine_distributed) %>% 
+      max() %>% 
+      format("%b %d, %Y")
+    
+    ### render text
+    paste("Vaccine doses administered as percentage of vaccines distributed by province/territory as of", last_day)
+    
+  })
+  
+  # province vaccine administration map for overview tab
+  output$plot_choropleth_overview_vaccine_admin_pct <- renderPlotly({
+    
+    max_days = data_ts_vaccine_distribution() %>% pull(date_vaccine_distributed) %>% unique %>% length
+    
+    ### join provincial vaccine numbers for relevant window to provincial map
+    dat <- geo_prov_simple %>%
+      left_join(
+        data_ts_vaccine_distribution() %>%
+          select(province_short, dvaccine) %>%
+          group_by(province_short) %>%
+          slice_tail(n = max_days) %>%
+          summarize(dvaccine = sum(dvaccine), .groups = "drop"),
+        by = "province_short"
+      ) %>% 
+      left_join(
+        data_ts_vaccine_administration() %>%
+          select(province_short, avaccine) %>%
+          group_by(province_short) %>%
+          slice_tail(n = max_days) %>%
+          summarize(avaccine = sum(avaccine), .groups = "drop"),
+        by = "province_short"
+      ) %>% 
+      mutate(pct_avacc_dvacc = 100 * avaccine / dvaccine,
+             pct_avacc_dvacc = round(pct_avacc_dvacc, 2))
+    
+    ### even out colour scale by rooting vaccine numbers
+    dat <- dat %>%
+      mutate(cases_colour = pct_avacc_dvacc^(1/3))
+    
+    ### define value labels
+    labs <- data.frame(
+      province_short = dat[["province_short"]],
+      x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      lab_cases = format(dat[["pct_avacc_dvacc"]], big.mark = ",", trim = TRUE),
+      ### arrows for NS, NB, PE to avoid overlap
+      show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
+      arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      stringsAsFactors = FALSE
+    )
+    
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
+    
+    ### plot data
+    plot_ly() %>%
+      add_sf(
+        data = dat,
+        type = "scatter",
+        split = ~ province,
+        color = ~ cases_colour,
+        colors = "Blues",
+        stroke = I("#000000"),
+        span = I(1.5),
+        hoverinfo = "none"
+      ) %>%
+      add_annotations(
+        data = labs,
+        x = ~ x,
+        y = ~ y,
+        text = ~ lab_cases,
+        hoverinfo = "text",
+        hovertext = paste0(labs$province_short, ": ", labs$lab_cases),
+        font = list(color = "black", size = 14),
+        bgcolor = "white",
+        bordercolor = "black",
+        showarrow = ~ show_arrow,
+        ax = ~ arrow_x,
+        ay = ~ arrow_y,
+        axref = "x",
+        ayref = "y"
+      ) %>%
+      layout(
+        xaxis = axis_hide,
+        yaxis = axis_hide,
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             ### hide all plotly buttons, since they do nothing here
+             displayModeBar = FALSE) %>%
+      hide_colorbar()
+  })
+  
+  # render province vaccine map for overview tab with dynamic width
+  output$ui_plot_choropleth_overview_vaccine_admin_pct <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width)
+        
+    ### render plot
+    fluidRow(
+      column(
+        h4(textOutput("title_choropleth_overview_vaccine_admin_pct")),
+        plotlyOutput("plot_choropleth_overview_vaccine_admin_pct",
+                     ### max width of plot = 600px
+                     ### scale so plot doesn't overflow screen at small widths
+                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+  
+  
+  
+  
+  # title for province vaccine map for overview tab
+  output$title_choropleth_overview_vaccine_at_least_one_dose <- renderText({
+
+    # max_days = data_ts_vaccine_administration() %>% pull(date_vaccine_administered) %>% unique %>% length
+    last_day = data_ts_vaccine_administration() %>% 
+      pull(date_vaccine_administered) %>% 
+      max() %>% 
+      format("%b %d, %Y")
+    
+    ### render text
+    paste("Percent at least one dose by province/territory as of", last_day)
+    
+  })
+  
+  # province vaccine administration map for overview tab
+  output$plot_choropleth_overview_vaccine_at_least_one_dose <- renderPlotly({
+    
+    max_days = data_ts_vaccine_administration() %>%
+      pull(date_vaccine_administered) %>%
+      unique %>%
+      length
+    
+    ### join provincial vaccine numbers for relevant window to provincial map
+    dat <- geo_prov_simple %>%
+      left_join(
+        data_ts_vaccine_completion() %>%
+          select(province_short, cvaccine) %>%
+          group_by(province_short) %>%
+          slice_tail(n = max_days) %>%
+          summarize(cvaccine = sum(cvaccine), .groups = "drop"),
+        by = "province_short"
+      ) %>%
+      left_join(
+        data_ts_vaccine_administration() %>%
+          select(province_short, avaccine) %>%
+          group_by(province_short) %>%
+          slice_tail(n = max_days) %>%
+          summarize(avaccine = sum(avaccine), .groups = "drop"),
+        by = "province_short"
+      ) %>%
+      replace_na(list(avaccine = 0,
+                      cvaccine = 0)) %>%  # 2020-12-13 is NA for avaccine
+      
+      mutate(one_dose = avaccine - cvaccine,
+             pct_at_least_one_dose = 100 * one_dose / pop,
+             pct_at_least_one_dose = round(pct_at_least_one_dose, 2))
+    
+    ### even out colour scale by rooting vaccine numbers
+    dat <- dat %>%
+      mutate(cases_colour = pct_at_least_one_dose^(1/3))
+    
+    ### define value labels
+    labs <- data.frame(
+      province_short = dat[["province_short"]],
+      x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      lab_cases = format(dat[["pct_at_least_one_dose"]], big.mark = ",", trim = TRUE),
+      ### arrows for NS, NB, PE to avoid overlap
+      show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
+      arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      stringsAsFactors = FALSE
+    )
+    
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
+    
+    ### plot data
+    plot_ly() %>%
+      add_sf(
+        data = dat,
+        type = "scatter",
+        split = ~ province,
+        color = ~ cases_colour,
+        colors = "Blues",
+        stroke = I("#000000"),
+        span = I(1.5),
+        hoverinfo = "none"
+      ) %>%
+      add_annotations(
+        data = labs,
+        x = ~ x,
+        y = ~ y,
+        text = ~ lab_cases,
+        hoverinfo = "text",
+        hovertext = paste0(labs$province_short, ": ", labs$lab_cases),
+        font = list(color = "black", size = 14),
+        bgcolor = "white",
+        bordercolor = "black",
+        showarrow = ~ show_arrow,
+        ax = ~ arrow_x,
+        ay = ~ arrow_y,
+        axref = "x",
+        ayref = "y"
+      ) %>%
+      layout(
+        xaxis = axis_hide,
+        yaxis = axis_hide,
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             ### hide all plotly buttons, since they do nothing here
+             displayModeBar = FALSE) %>%
+      hide_colorbar()
+  })
+  
+  # render province vaccine map for overview tab with dynamic width
+  output$ui_plot_choropleth_overview_vaccine_at_least_one_dose <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width)
+    
+    ### render plot
+    fluidRow(
+      column(
+        h4(textOutput("title_choropleth_overview_vaccine_at_least_one_dose")),
+        plotlyOutput("plot_choropleth_overview_vaccine_at_least_one_dose",
+                     ### max width of plot = 600px
+                     ### scale so plot doesn't overflow screen at small widths
+                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+
+  
+  
+  
+  # title for province vaccine map for overview tab
+  output$title_choropleth_overview_vaccine_full_pct <- renderText({
+    
+    last_day = data_ts_vaccine_administration() %>% 
+      pull(date_vaccine_administered) %>% 
+      max() %>% 
+      format("%b %d, %Y")
+    
+    ### render text
+    paste("Percent fully vaccinated by province/territory as of", last_day)
+    
+  })
+    
+  # province vaccine administration map for overview tab
+  output$plot_choropleth_overview_vaccine_full_pct <- renderPlotly({
+    
+    max_days <- data_ts_vaccine_administration() %>% pull(date_vaccine_administered) %>% unique %>% length
+    
+    ### join provincial vaccine numbers for relevant window to provincial map
+    dat <- geo_prov_simple %>%
+      left_join(
+        data_ts_vaccine_completion() %>%
+          select(province_short, cvaccine) %>%
+          group_by(province_short) %>%
+          slice_tail(n = max_days) %>%
+          summarize(cvaccine = sum(cvaccine), .groups = "drop"),
+        by = "province_short"
+      ) %>%
+      left_join(
+        data_ts_vaccine_administration() %>%
+          select(province_short, avaccine) %>%
+          group_by(province_short) %>%
+          slice_tail(n = max_days) %>%
+          summarize(avaccine = sum(avaccine), .groups = "drop"),
+        by = "province_short"
+      ) %>%
+      replace_na(list(avaccine = 0,
+                      cvaccine = 0)) %>%  # 2020-12-13 is NA for avaccine
+      mutate(pct_full_vacc = 100 * cvaccine / pop,
+             pct_full_vacc = round(pct_full_vacc, 2))
+    
+    ### even out colour scale by rooting vaccine numbers
+    dat <- dat %>%
+      mutate(cases_colour = pct_full_vacc^(1/3))
+    
+    ### define value labels
+    labs <- data.frame(
+      province_short = dat[["province_short"]],
+      x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      lab_cases = format(dat[["pct_full_vacc"]], big.mark = ",", trim = TRUE),
+      ### arrows for NS, NB, PE to avoid overlap
+      show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
+      arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
+      arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
+      stringsAsFactors = FALSE
+    )
+    
+    ### nudge labels
+    labs <- choropleth_label_nudger(labs)
+    
+    ### plot data
+    plot_ly() %>%
+      add_sf(
+        data = dat,
+        type = "scatter",
+        split = ~ province,
+        color = ~ cases_colour,
+        colors = "Blues",
+        stroke = I("#000000"),
+        span = I(1.5),
+        hoverinfo = "none"
+      ) %>%
+      add_annotations(
+        data = labs,
+        x = ~ x,
+        y = ~ y,
+        text = ~ lab_cases,
+        hoverinfo = "text",
+        hovertext = paste0(labs$province_short, ": ", labs$lab_cases),
+        font = list(color = "black", size = 14),
+        bgcolor = "white",
+        bordercolor = "black",
+        showarrow = ~ show_arrow,
+        ax = ~ arrow_x,
+        ay = ~ arrow_y,
+        axref = "x",
+        ayref = "y"
+      ) %>%
+      layout(
+        xaxis = axis_hide,
+        yaxis = axis_hide,
+        showlegend = FALSE
+      ) %>%
+      config(displaylogo = FALSE,
+             ### hide all plotly buttons, since they do nothing here
+             displayModeBar = FALSE) %>%
+      hide_colorbar()
+  })
+  
+  # render province vaccine map for overview tab with dynamic width
+  output$ui_plot_choropleth_overview_vaccine_full_pct <- renderUI({
+    
+    ### don't run without inputs defined
+    req(input$screen_width)
+    
+    ### render plot
+    fluidRow(
+      column(
+        h4(textOutput("title_choropleth_overview_vaccine_full_pct")),
+        plotlyOutput("plot_choropleth_overview_vaccine_full_pct",
+                     ### max width of plot = 600px
+                     ### scale so plot doesn't overflow screen at small widths
+                     width = ifelse(input$screen_width * (7/8) > 600, 600, input$screen_width * (7/8))),
+        width = 12,
+        align = "center"
+      )
+    )
+  })
+
+  
+  
   
   # province summary table for overview tab
   output$table_prov_overview <- renderDT({
@@ -770,6 +1530,10 @@ server <- function(input, output, session) {
   ## mortality
   output$title_flattening_mortality <- renderText({title_flattening("Daily reported deaths by province")})
   output$plot_flattening_mortality <- renderPlotly({plot_flattening(data_ts_mortality(), "date_death_report", "deaths", "Daily reported deaths")})
+  
+  ## daily doses administered (7-day rolling average)
+  output$title_flattening_avaccine <- renderText({title_flattening("Daily vaccine doses administered")})
+  output$plot_flattening_avaccine <- renderPlotly({plot_flattening(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Daily vaccine doses administered")})
   
   # comparisons
   
@@ -1682,6 +2446,88 @@ server <- function(input, output, session) {
         yaxis = list(title = "Vaccine doses", fixedrange = TRUE),
         legend = plotly_legend,
         hovermode = "x unified"
+      ) %>%
+      config(displaylogo = FALSE,
+             modeBarButtonsToRemove = plotly_buttons)
+    
+  })
+  
+  ## percent at least one dose vaccinated data
+  data_at_least_one_dose <- reactive({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range)
+    
+    ### merge data
+    dat <- data_ts_vaccine_administration() %>%
+      rename(date_vaccine = date_vaccine_administered) %>%
+      left_join(data_ts_vaccine_completion(),
+                by = c("date_vaccine" = "date_vaccine_completed", "province" = "province")) %>%
+      select(province, date_vaccine, cumulative_avaccine, cumulative_cvaccine) %>%
+      replace_na(list(cumulative_avaccine = 0,
+                      cumulative_cvaccine = 0)) # 2020-12-13 is NA for avaccine
+    
+    ### collapse observations into one row per date
+    dat %>%
+      ### merge short names
+      left_join(map_prov %>% select(province, province_short, pop),
+                by = c("province")) %>% 
+      select(date_vaccine, pop, cumulative_avaccine, cumulative_cvaccine, province_short) %>%
+      group_by(date_vaccine, province_short) %>%
+      summarize(across(everything(), sum), .groups = "drop") %>% 
+      mutate(
+        at_least_one_dose_vaxx = 100 * (cumulative_avaccine - cumulative_cvaccine) / pop,
+        lab_percent = paste0(formatC(at_least_one_dose_vaxx, format = "f", digit = 2), "%")
+      ) %>% 
+      ungroup() %>% 
+      group_by(province_short) %>% 
+      filter(date_vaccine == max(date_vaccine))
+    
+  })
+  
+  ## percent fully vaccinated title
+  output$title_at_least_one_dose <- renderText({
+    
+    ### don't run without inputs defined
+    req(input$prov)
+    
+    if (input$prov != "all") {
+      paste("Percent with at least one dose in", input$prov)
+    } else {
+      "Percent with at least one dose in Canada"
+    }
+    
+  })
+  
+  ## percent partially vaccinated plot
+  output$plot_at_least_one_dose <- renderPlotly({
+    
+    ### don't run without inputs defined
+    req(input$prov, input$date_range)
+    
+    ### get merged vaccine data
+    dat <- data_at_least_one_dose()
+    
+    ### plot data
+    dat %>%
+      plot_ly() %>%
+      add_trace(
+        x = ~ province_short,
+        y = ~ at_least_one_dose_vaxx,
+        type = "bar",
+        color = ~ province_short,
+        colors = palette_province_short,
+        hoverinfo = "text",
+        hovertext = ~ paste0(
+          "Province: ", dat$province_short, "\n",
+          "Received at least one dose", ": ", dat$cumulative_cvaccine, "\n",
+          "Percent of total population: ", dat$lab_percent
+        )
+      ) %>% 
+      layout(
+        xaxis = list(title = "Province", fixedrange = TRUE),
+        yaxis = list(title = "Percent", fixedrange = TRUE),
+        showlegend = FALSE
       ) %>%
       config(displaylogo = FALSE,
              modeBarButtonsToRemove = plotly_buttons)
