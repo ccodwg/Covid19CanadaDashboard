@@ -35,7 +35,7 @@ tab_overview <- tabItem(tabName = "tab_overview",
                               p(
                                 "Reported cases are cumulative and include both confirmed and presumptive positive cases. Repatriated cases are included in the total but not shown in the map below."
                               ),
-                              HTML("<b>Check out VaxView, our vaccine tracker, below:</b><br><br>"),
+                              HTML("<br>"),
                               tabsetPanel(
                                 tabPanel(
                                   "EpiView",
@@ -47,7 +47,7 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                       uiOutput("ui_window_choropleth_overview_cases"),
                                     ),
                                     tabPanel(
-                                      "Deaths",
+                                      "Mortality",
                                       uiOutput("ui_plot_choropleth_overview_deaths"),
                                       uiOutput("ui_window_choropleth_overview_deaths"),
                                     ),
@@ -63,17 +63,17 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                   tabsetPanel(
                                     type = "tabs",
                                     tabPanel(
-                                      "Vaccine administration",
+                                      "Administered",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_administration"),
                                       uiOutput("ui_window_choropleth_overview_vaccine_administration"),
                                     ),
                                     tabPanel(
-                                      "Vaccine distribution",
+                                      "Distributed",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_distribution"),
                                       uiOutput("ui_window_choropleth_overview_vaccine_distribution"),
                                     ),
                                     tabPanel(
-                                      "% Vaccines administered from total distribution",
+                                      "% Administered of total distributed",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_admin_pct"),
                                       uiOutput("ui_window_choropleth_overview_vaccine_admin_pct"),
                                     ),

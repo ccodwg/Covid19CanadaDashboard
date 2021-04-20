@@ -279,6 +279,7 @@ server <- function(input, output, session) {
         escape = FALSE,
         options = list(
           paging = FALSE,
+          searching = FALSE,
           scrollX = TRUE,
           compact = TRUE,
           autoWidth = TRUE
@@ -1439,6 +1440,7 @@ server <- function(input, output, session) {
       DT::datatable(class = "stripe compact hover", rownames = FALSE, extensions = "FixedColumns",
                     options = list(
                       paging = FALSE,
+                      searching = FALSE,
                       scrollX = TRUE,
                       compact = TRUE,
                       autoWidth = TRUE,
@@ -2479,7 +2481,7 @@ server <- function(input, output, session) {
         direction = "right",
         xanchor = "center",
         yanchor = "top",
-        x = 0.1,
+        x = 0,
         y = 1.21,
         showactive = TRUE,
           buttons = list(
@@ -3027,6 +3029,7 @@ server <- function(input, output, session) {
                     options = list(
                       dom = "t",
                       paging = FALSE,
+                      searching = FALSE,
                       scrollX = FALSE,
                       compact = TRUE,
                       autoWidth = TRUE,
