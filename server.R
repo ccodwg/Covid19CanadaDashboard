@@ -1666,13 +1666,17 @@ server <- function(input, output, session) {
     
     ### calculate smoothed vaccine distribution
     cumulative_dvaccine_min <- dat %>% filter(cumulative_dvaccine != 0) %>% pull(cumulative_dvaccine) %>% min
+    cumulative_dvaccine_max <- dat %>% filter(cumulative_dvaccine != 0) %>% pull(cumulative_dvaccine) %>% max
     dat <- dat %>%
       mutate(
         cumulative_dvaccine_smooth = gam(cumulative_dvaccine ~ s(as.integer(date_vaccine), bs = "tp")) %>%
           fitted %>% round(0),
         cumulative_dvaccine_smooth = ifelse(cumulative_dvaccine_smooth < cumulative_dvaccine_min,
                                             cumulative_dvaccine_min,
-                                            cumulative_dvaccine_smooth) # avoid negative values
+                                            cumulative_dvaccine_smooth), # avoid negative values
+        cumulative_dvaccine_smooth = ifelse(cumulative_dvaccine_smooth > cumulative_dvaccine_max,
+                                            cumulative_dvaccine_max,
+                                            cumulative_dvaccine_smooth) # avoid smoothed values larger than true max value
         )
     
     ### calculate 7-day average vaccine administration
