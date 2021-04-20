@@ -23,12 +23,16 @@ tab_overview <- tabItem(tabName = "tab_overview",
                               column(includeHTML("text/vaccine_text.html"), width = 12, align = "center"),
                               p(HTML("<br><br>")),
                               p(HTML(
-                                paste0("<b>Last updated: ", update_time, "</b>"))),
+                                paste0("<b><h1 style='font-size:18px'>Last updated: ", update_time, "</h1></b>"))),
                               fluidRow(box(HTML(gsub("\n", "<br>", news)), title = "Daily update notes (click + to expand)", width = 12, collapsible = TRUE, collapsed = TRUE)),
                               p(
                                 "Reported cases are cumulative and include both confirmed and presumptive positive cases. Repatriated cases are included in the total but not shown in the map below."
                               ),
                               HTML("<br>"),
+                              p(HTML(
+                                paste0("<center><b><h1 style='font-size:27px'>Summary of COVID-19 in Canada</h1></b></center>"))),
+                              tags$head(
+                                tags$style(".nav-tabs {font-size: 16px; font-weight: bold; font-color: black}")),
                               tabsetPanel(
                                 tabPanel(
                                   "EpiView",
@@ -82,6 +86,8 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                     )
                                   ))),
                               HTML("<br>"), # blank line
+                              p(HTML(
+                                paste0("<center><b><h1 style='font-size:27px'>Daily COVID-19 Trends</h1></b></center>"))),
                                 tabsetPanel(
                                   type = "tabs",
                                   tabPanel(
@@ -122,6 +128,7 @@ tab_overview <- tabItem(tabName = "tab_overview",
                               tags$p(""), # blank line
                               htmlOutput({"text_flattening"}),
                               tags$p(""), # blank line
+                              HTML(paste0("<br><center><b><h1 style='font-size:27px'>Metrics by Province/Territory</h1></b></center>")),
                         fluidRow(DTOutput("table_prov_overview")),
                         "RP = repatriated travellers."
                         )
