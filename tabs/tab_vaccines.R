@@ -61,7 +61,6 @@ tab_vaccines <- tabItem(tabName = "tab_vaccines",
                                      ),
                             )
                           ),
-                          HTML("Note that it is possible for doses administered to temporarily exceed doses distributed for two reasons: 1) Doses distributed is updated less frequently than doses administered and 2) <a href='https://www.saskatchewan.ca/government/news-and-media/2021/february/02/covid19-update-for-february-2-35575-vaccines-delivered-223-new-cases-266-recoveries-eight-deaths' target='_blank'>extra doses can sometimes be obtained beyond the labelled amount</a>."),
                           tabsetPanel(
                             type = "tabs",
                             tabPanel("Vaccine gap",
@@ -81,6 +80,8 @@ tab_vaccines <- tabItem(tabName = "tab_vaccines",
                                      )
                             )
                           ),
+                          HTML("Note that it is possible for doses administered to temporarily exceed doses distributed for two reasons: 1) Doses distributed is updated less frequently than doses administered and 2) <a href='https://www.saskatchewan.ca/government/news-and-media/2021/february/02/covid19-update-for-february-2-35575-vaccines-delivered-223-new-cases-266-recoveries-eight-deaths' target='_blank'>extra doses can sometimes be obtained beyond the labelled amount</a>.<br><br>By default, the vaccine gap plot shows smoothed values of the vaccine distribution time series to account for reporting delays in the distribution numbes. This can be disabled by clicking the \"Smoothed distributed\" button.<br>"),
+                          HTML("<br>"), # blank line
                           tabsetPanel(
                             type = "tabs",
                             tabPanel(
