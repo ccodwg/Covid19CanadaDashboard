@@ -165,6 +165,9 @@ server <- function(input, output, session) {
       summarize(pop = max(pop), !!sym(var_comp) := mean(!!sym(var_comp)), .groups = "drop")
   }
   
+  
+  
+  
   ## cases
   data_cases <- reactive({
     get_data("cases", "date_report")
@@ -255,6 +258,12 @@ server <- function(input, output, session) {
     get_data_comp("ts_testing", "date_testing", "testing", comparison_window = input$window_comp_testing, comparison_scale = input$scale_comp_testing)
   })
   
+  ## comparisons VOC+ relative to Cases
+  
+  data_comp_voc <- reactive({
+    get_data_voc_comp()
+  })
+  
   # render info tables
   
   ## info: testing
@@ -340,7 +349,7 @@ server <- function(input, output, session) {
           paste0(formatC(. / 1000000, digits = 2, format = "f", big.mark = ","), "m")
         }
       }
-    val_update <- table_overview %>% filter(Province == "Canada") %>% pull(var_update)
+    val_update <- table_overview %>% filter(Province == input$prov) %>% pull(var_update)
     
     ### value box
     HTML(paste0(
@@ -1190,7 +1199,7 @@ server <- function(input, output, session) {
       paste0(lab_title, " in ", filter_province)
     } else {
       if (filter_province == "Canada" & by_province) {
-        paste0(lab_title, " in ", filter_province, " by province (n = ", format(n, big.mark = ","), ")")
+        paste0(lab_title, " in ", filter_province, " by Province (n = ", format(n, big.mark = ","), ")")
       } else {
         paste0(lab_title, " in ", filter_province, " (n = ", format(n, big.mark = ","), ")")
       }
@@ -1288,6 +1297,7 @@ server <- function(input, output, session) {
       layout(
         yaxis = list(title = 'Count',
                      fixedrange= FALSE),
+        xaxis = list(title = lab_x),
         barmode = 'stack',
         showlegend = TRUE,
         hovermode = "x unified",
@@ -1299,7 +1309,7 @@ server <- function(input, output, session) {
 
   
   ## function: daily numbers plot
-  plot_cases_voc <- function(fun_data, var_date, all_variant, non_voc, lab_x, lab_y) {
+  plot_cases_voc <- function(fun_data, var_date, var_b117, var_b1351, var_p1, non_voc, lab_x, lab_y) {
     
     ### don't run without inputs defined
     req(input$prov, input$date_range)
@@ -1308,7 +1318,7 @@ server <- function(input, output, session) {
     dat <- fun_data
     
     ### if no matching data, return blank plot
-    if (sum(dat[, all_variant]) == 0) {
+    if (sum(dat[, non_voc]) == 0) {
       return(plot_no_data())
     }
     
@@ -1316,26 +1326,37 @@ server <- function(input, output, session) {
     
     dat <- dat %>% filter(!!sym(var_date) != "2021-02-03") %>%
       ### aggregate values so that one date = one row to ensure correct plotting of bars
-      select(!!sym(var_date),!!sym(all_variant),!!sym(non_voc)) %>%
+      select(!!sym(var_date),!!sym(var_b117),!!sym(var_b1351),!!sym(var_p1),!!sym(non_voc)) %>%
       group_by(!!sym(var_date)) %>%
-      summarize(!!sym(all_variant) := sum(!!sym(all_variant)),
+      summarize(!!sym(var_b117) := sum(!!sym(var_b117)),
+                !!sym(var_b1351) := sum(!!sym(var_b1351)),
+                !!sym(var_p1) := sum(!!sym(var_p1)),
                 !!sym(non_voc) := sum(!!sym(non_voc)),
                 .groups = "drop") %>%
       ### calculate rolling average
-      mutate(rollavg_voc = rollapply(!!sym(all_variant), 7, mean, align = "right", partial = TRUE),
+      mutate(rollavg_b117 = rollapply(!!sym(var_b117), 7, mean, align = "right", partial = TRUE),
+             rollavg_b1351 = rollapply(!!sym(var_b1351), 7, mean, align = "right", partial = TRUE),
+             rollavg_p1 = rollapply(!!sym(var_p1), 7, mean, align = "right", partial = TRUE),
              rollavg_nonvoc = rollapply(!!sym(non_voc), 7, mean, align = "right", partial = TRUE)) 
     
     ### plot data
     dat %>%
       plot_ly(x = as.formula(paste("~", var_date)),
               y = ~rollavg_nonvoc,
-              type = "scatter",mode = 'none', fill = 'tozeroy', name = "Total Daily Cases",fillcolor = 'rgba(169, 169, 169, 0.7)'
+              type = "scatter",mode = 'none', fill = 'tozeroy', fillcolor = 'rgba(169, 169, 169, 0.7)', name = "Total Daily Cases"
       ) %>%
       add_trace(x = as.formula(paste("~",var_date)),
-                y = ~rollavg_voc, mode = 'none', fill = 'tozeroy', fillcolor = 'rgba(139, 0, 0, 1)',name = "Daily VOCs"
+                y = ~rollavg_b117, mode = 'none', fill = 'tozeroy', fillcolor = 'rgba(0, 95, 249, 1)',name = "B117 Cases"
+      ) %>%
+      add_trace(x = as.formula(paste("~",var_date)),
+                y = ~rollavg_b1351, mode = 'none', fill = 'tozeroy', fillcolor = 'rgba(255, 165, 0, 1)',name = "B1351 Cases"
+      ) %>%
+      add_trace(x = as.formula(paste("~",var_date)),
+                y = ~rollavg_p1, mode = 'none', fill = 'tozeroy', fillcolor = 'rgba(0, 128, 0, 1)',name = "P1 Cases"
       ) %>%
       layout(
         yaxis = list(title = 'Count'),
+        xaxis = list(title = lab_x),
         showlegend = TRUE,
         hovermode = "x unified",
         legend = plotly_legend
@@ -1402,7 +1423,7 @@ server <- function(input, output, session) {
   ## VOC trend overview plot
   output$title_daily_voc <- renderText({title_daily_cumulative(data_ts_variants_total(), "date_report", "variant_cases", "7-day Rolling Reported Cases and VOCs")})
   output$plot_daily_voc <- renderPlotly({
-    plot_cases_voc(data_ts_variants_total(), "date_report","variant_cases","cases", "Report Date", "Daily Reported VOC Cases")
+    plot_cases_voc(data_ts_variants_total(), "date_report","b117_variant_cases","b1351_variant_cases","p1_variant_cases","cases", "Report Date", "Daily Reported VOC Cases")
   })
 
   ## daily numbers: variant cases by type
