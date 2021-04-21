@@ -45,6 +45,11 @@ ui <- dashboardPagePlus(
         icon = icon("calendar-plus")
       ),
       menuItem(
+        "Variant Cases",
+        tabName = "tab_variants",
+        icon = icon("shield-virus")
+      ),
+      menuItem(
         "Mortality",
         tabName = "tab_mortality",
         icon = icon("heartbeat")
@@ -57,6 +62,9 @@ ui <- dashboardPagePlus(
       menuItem("Testing",
                tabName = "tab_testing",
                icon = icon("vial")),
+      menuItem("Travel",
+               tabName = "tab_travel",
+               icon = icon("plane")),
       menuItem(
         "About the data",
         tabName = "tab_about",
@@ -128,15 +136,17 @@ ui <- dashboardPagePlus(
       tab_maps,
       tab_vaccines,
       tab_cases,
+      tab_variants,
       tab_mortality,
       tab_recovered,
       tab_testing,
+      tab_travel,
       tab_about
     )
   ),
   dashboardFooter(
     left_text = HTML(
-      "Created by <a href='https://twitter.com/JPSoucy' target='_blank'> Jean-Paul R. Soucy</a> and <a href='https://twitter.com/ishaberry2' target='_blank'> Isha Berry</a>, Dalla Lana School of Public Health, University of Toronto. Developed by Jean-Paul R. Soucy, Isha Berry, <a href='https://twitter.com/benkcwong' target='_blank'> Ben Wong</a> and <a href='https://github.com/kbelisar' target='_blank'> Kyla Belisario</a>, with contributions from <a href='https://www.linkedin.com/in/wenyu-huang-11b211124/' target='_blank'> Wenyu Huang</a>, <a href='https://www.linkedin.com/in/angelinazhu' target='_blank'> Angelina Zhu</a>, <a href='https://github.com/mattwarkentin' target='_blank'> Matthew T. Warkentin</a> and <a href='https://mountainmath.ca/' target='_blank'> Jens von Bergmann</a>. Data curated by the <a href='https://opencovid.ca' target='_blank'> COVID-19 Canada Open Data Working Group</a> (see \"About the data\" for sources)."
+      "Developed by <a href='https://twitter.com/JPSoucy' target='_blank'> Jean-Paul R. Soucy</a> and <a href='https://twitter.com/ishaberry2' target='_blank'> Isha Berry</a>, Dalla Lana School of Public Health, University of Toronto with contributions from <a href='https://www.linkedin.com/in/wenyu-huang-11b211124/' target='_blank'> Wenyu Huang</a>, <a href='https://www.linkedin.com/in/angelinazhu' target='_blank'> Angelina Zhu</a>, <a href='https://github.com/mattwarkentin' target='_blank'> Matthew T. Warkentin</a> and <a href='https://mountainmath.ca/' target='_blank'> Jens von Bergmann</a>. Data curated by the <a href='https://github.com/ishaberry/Covid19Canada' target='_blank'> COVID-19 Canada Open Data Working Group</a> (see \"About the data\" for sources)."
     )
   ),
   sidebar_fullCollapse = TRUE
