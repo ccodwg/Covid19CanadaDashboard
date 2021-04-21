@@ -1292,7 +1292,7 @@ server <- function(input, output, session) {
                 name = "P1"
       ) %>%
       add_lines(x = as.formula(paste("~", var_date)),
-                y = ~roll_avg, name = "7-day VOC average") %>%
+                y = ~roll_avg, name = "7-day VOC avg") %>%
       layout(yaxis2 = list(overlaying = "y", side = "right")) %>%
       layout(
         yaxis = list(title = 'Count',
@@ -1343,7 +1343,7 @@ server <- function(input, output, session) {
     dat %>%
       plot_ly(x = as.formula(paste("~", var_date)),
               y = ~rollavg_nonvoc,
-              type = "scatter",mode = 'none', fill = 'tozeroy', fillcolor = 'rgba(169, 169, 169, 0.7)', name = "Total Daily Cases"
+              type = "scatter",mode = 'none', fill = 'tozeroy', fillcolor = 'rgba(169, 169, 169, 0.7)', name = "Daily Cases"
       ) %>%
       add_trace(x = as.formula(paste("~",var_date)),
                 y = ~rollavg_b117, mode = 'none', fill = 'tozeroy', fillcolor = 'rgba(0, 95, 249, 1)',name = "B117 Cases"
@@ -1399,6 +1399,10 @@ server <- function(input, output, session) {
           case_when(
             var_val == "cumulative_avaccine" ~ paste0("Cumulative vaccine doses administered: ", dat[["lab_val"]]),
             var_val == "cumulative_dvaccine" ~ paste0("Cumulative vaccine doses distributed: ", dat[["lab_val"]]),
+            var_val == "cumulative_variant_cases" ~ paste0("Cumulative VOC Cases: ", dat[["lab_val"]]),
+            var_val == "b117_cumulative_variant_cases" ~ paste0("Cumulative B117 Cases: ", dat[["lab_val"]]),
+            var_val == "b1351_cumulative_variant_cases" ~ paste0("Cumulative B1351 Cases: ", dat[["lab_val"]]),
+            var_val == "p1_cumulative_variant_cases" ~ paste0("Cumulative P1 Cases: ", dat[["lab_val"]]),
             TRUE ~ paste0(capitalize(sub("_", " ", var_val)), ": ", dat[["lab_val"]])
           )
         )
