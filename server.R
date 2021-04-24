@@ -43,49 +43,94 @@ server <- function(input, output, session) {
     
   })
   
+  # tabs with sidebar controls
+  sidebar_controls_tabs <- c(
+    "tab_trends",
+    "tab_maps",
+    "tab_cases",
+    "tab_mortality",
+    "tab_recovered",
+    "tab_testing",
+    "tab_vaccines",
+    "tab_travel"
+  )
+  
   # render sidebar
   output$sidebar_controls <- renderUI({
-    if (input$tab %in% c(
-      "tab_trends",
-      "tab_maps",
-      "tab_cases",
-      "tab_mortality",
-      "tab_recovered",
-      "tab_testing",
-      "tab_vaccines",
-      "tab_travel"
-    )) {
-      list(
-        selectInput(
-          "prov",
-          "Province",
-          choices = c(
-            "All provinces" = "Canada",
-            "Alberta" = "Alberta",
-            "British Columbia" = "BC",
-            "Manitoba" = "Manitoba",
-            "New Brunswick" = "New Brunswick",
-            "Newfoundland and Labrador" = "NL",
-            "Northwest Territories" = "NWT",
-            "Nova Scotia" = "Nova Scotia",
-            "Nunavut" = "Nunavut",
-            "Ontario" = "Ontario",
-            "Prince Edward Island" = "PEI",
-            "Quebec" = "Quebec",
-            "Saskatchewan" = "Saskatchewan",
-            "Yukon" = "Yukon"
-          )
-        ),
-        dateRangeInput(
-          "date_range",
-          "Date range",
-          start = date_min,
-          end = date_max,
-          min = date_min,
-          max = date_max,
-          format = "yyyy/mm/dd"
+    list(
+      selectInput(
+        "prov",
+        "Province",
+        choices = c(
+          "All provinces" = "Canada",
+          "Alberta" = "Alberta",
+          "British Columbia" = "BC",
+          "Manitoba" = "Manitoba",
+          "New Brunswick" = "New Brunswick",
+          "Newfoundland and Labrador" = "NL",
+          "Northwest Territories" = "NWT",
+          "Nova Scotia" = "Nova Scotia",
+          "Nunavut" = "Nunavut",
+          "Ontario" = "Ontario",
+          "Prince Edward Island" = "PEI",
+          "Quebec" = "Quebec",
+          "Saskatchewan" = "Saskatchewan",
+          "Yukon" = "Yukon"
         )
+      ),
+      dateRangeInput(
+        "date_range",
+        "Date range",
+        start = date_min,
+        end = date_max,
+        min = date_min,
+        max = date_max,
+        format = "yyyy/mm/dd"
       )
+    )
+  })
+  
+  # reset filters when sidebar is hidden
+  output$sidebar_controls_off <- renderUI({
+    list(
+      updateSelectInput(
+        "prov",
+        "Province",
+        choices = c(
+          "All provinces" = "Canada",
+          "Alberta" = "Alberta",
+          "British Columbia" = "BC",
+          "Manitoba" = "Manitoba",
+          "New Brunswick" = "New Brunswick",
+          "Newfoundland and Labrador" = "NL",
+          "Northwest Territories" = "NWT",
+          "Nova Scotia" = "Nova Scotia",
+          "Nunavut" = "Nunavut",
+          "Ontario" = "Ontario",
+          "Prince Edward Island" = "PEI",
+          "Quebec" = "Quebec",
+          "Saskatchewan" = "Saskatchewan",
+          "Yukon" = "Yukon"
+        )
+      ),
+      updateDateRangeInput(
+        "date_range",
+        "Date range",
+        start = date_min,
+        end = date_max,
+        min = date_min,
+        max = date_max,
+        format = "yyyy/mm/dd"
+      )
+    )
+  })
+  
+  # show or hide sidebar controls
+  observe({
+    if (!req(input$tab) %in% sidebar_controls_tabs) {
+      hide(id = "sidebar_controls")
+    } else {
+      show(id = "sidebar_controls")
     }
   })
   

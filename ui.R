@@ -14,6 +14,7 @@ ui <- dashboardPagePlus(
   title = "COVID-19 in Canada",
   dashboardHeader(title = "COVID-19 in Canada"),
   dashboardSidebar(
+    useShinyjs(),
     sidebarMenu(
       id = "tab",
       uiOutput("sidebar_controls"),
