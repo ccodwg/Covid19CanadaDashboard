@@ -2482,18 +2482,29 @@ server <- function(input, output, session) {
         fill = "tozeroy",
         fillcolor = "rgba(0, 0, 255, 0.3)"
       ) %>%
-      add_trace(
-        type = "scatter",
-        mode = "lines",
-        x = ~date_vaccine,
-        y = ~projected,
-        line = list(color = "black", dash = "dash"),
-        name = "Projected",
-        fill = "tozeroy",
-        fillcolor = "rgba(0, 0, 255, 0.1)",
-        stackgroup = "one", # prevent weirdness with filling the other two traces
-        visible = "legendonly" # off by default
-      ) %>%
+      ### only add projection if showing most recent data
+      {
+        if (input$date_range[2] == date_max) {
+          add_trace(
+            .,
+            type = "scatter",
+            mode = "lines",
+            x = ~date_vaccine,
+            y = ~projected,
+            line = list(color = "black", dash = "dash"),
+            name = "Projected",
+            fill = "tozeroy",
+            fillcolor = "rgba(0, 0, 255, 0.1)",
+            stackgroup = "one", # prevent weirdness with filling the other two traces
+            visible = "legendonly" # off by default
+          )
+        } else {
+          ### blank trace to keep numbering of traces the same
+          add_trace(.,
+                    type = "scatter",
+                    mode = "markers")
+        }
+        } %>%
      add_trace(
        type = "scatter",
        mode = "none",
