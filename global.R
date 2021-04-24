@@ -4,7 +4,6 @@
 library(shiny)
 library(shinydashboard)
 library(shinydashboardPlus)
-library(shinyBS)
 library(shinyalert) # display pop-ups
 library(metathis)
 library(rsconnect)
