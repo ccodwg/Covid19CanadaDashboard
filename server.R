@@ -55,65 +55,33 @@ server <- function(input, output, session) {
     "tab_travel"
   )
   
+  # define province filter input list
+  sidebar_provs <- c(
+    "All provinces" = "Canada",
+    "Alberta" = "Alberta",
+    "British Columbia" = "BC",
+    "Manitoba" = "Manitoba",
+    "New Brunswick" = "New Brunswick",
+    "Newfoundland and Labrador" = "NL",
+    "Northwest Territories" = "NWT",
+    "Nova Scotia" = "Nova Scotia",
+    "Nunavut" = "Nunavut",
+    "Ontario" = "Ontario",
+    "Prince Edward Island" = "PEI",
+    "Quebec" = "Quebec",
+    "Saskatchewan" = "Saskatchewan",
+    "Yukon" = "Yukon"
+  )
+  
   # render sidebar
   output$sidebar_controls <- renderUI({
     list(
       selectInput(
         "prov",
         "Province",
-        choices = c(
-          "All provinces" = "Canada",
-          "Alberta" = "Alberta",
-          "British Columbia" = "BC",
-          "Manitoba" = "Manitoba",
-          "New Brunswick" = "New Brunswick",
-          "Newfoundland and Labrador" = "NL",
-          "Northwest Territories" = "NWT",
-          "Nova Scotia" = "Nova Scotia",
-          "Nunavut" = "Nunavut",
-          "Ontario" = "Ontario",
-          "Prince Edward Island" = "PEI",
-          "Quebec" = "Quebec",
-          "Saskatchewan" = "Saskatchewan",
-          "Yukon" = "Yukon"
-        )
+        choices = sidebar_provs
       ),
       dateRangeInput(
-        "date_range",
-        "Date range",
-        start = date_min,
-        end = date_max,
-        min = date_min,
-        max = date_max,
-        format = "yyyy/mm/dd"
-      )
-    )
-  })
-  
-  # reset filters when sidebar is hidden
-  output$sidebar_controls_off <- renderUI({
-    list(
-      updateSelectInput(
-        "prov",
-        "Province",
-        choices = c(
-          "All provinces" = "Canada",
-          "Alberta" = "Alberta",
-          "British Columbia" = "BC",
-          "Manitoba" = "Manitoba",
-          "New Brunswick" = "New Brunswick",
-          "Newfoundland and Labrador" = "NL",
-          "Northwest Territories" = "NWT",
-          "Nova Scotia" = "Nova Scotia",
-          "Nunavut" = "Nunavut",
-          "Ontario" = "Ontario",
-          "Prince Edward Island" = "PEI",
-          "Quebec" = "Quebec",
-          "Saskatchewan" = "Saskatchewan",
-          "Yukon" = "Yukon"
-        )
-      ),
-      updateDateRangeInput(
         "date_range",
         "Date range",
         start = date_min,
@@ -128,9 +96,24 @@ server <- function(input, output, session) {
   # show or hide sidebar controls
   observe({
     if (!req(input$tab) %in% sidebar_controls_tabs) {
-      hide(id = "sidebar_controls")
+      shinyjs::hide(id = "sidebar_controls")
+      updateSelectInput(
+        session = session,
+        inputId = "prov",
+        label = "Province",
+        choices = sidebar_provs
+        )
+        updateDateRangeInput(
+          session = session,
+          inputId = "date_range",
+          label = "Date range",
+          start = date_min,
+          end = date_max,
+          min = date_min,
+          max = date_max
+          )
     } else {
-      show(id = "sidebar_controls")
+      shinyjs::show(id = "sidebar_controls")
     }
   })
   
