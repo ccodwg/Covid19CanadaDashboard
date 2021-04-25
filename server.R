@@ -1486,16 +1486,26 @@ server <- function(input, output, session) {
   })
   
   ## function: flattening plot title
-  title_flattening <- function(lab_title, val_scale = input$scale_flattening) {
+  title_flattening <- function(lab_title, val_scale = input$scale_flattening, val_scale2 = input$scale_trends) {
     
     ### don't run without inputs defined
-    req(input$scale_flattening)
+    req(input$scale_flattening, input$scale_trends)
     
     ### render title
     if (val_scale == "linear") {
-      paste0(lab_title, " (7-day rolling average)")
+      if(val_scale2 == "absolute") {
+        paste0(lab_title, " by province (7-day rolling average)")  
+      } else if (val_scale2 == "per-capita") {
+        paste0(lab_title, " per 100,000 by province (7-day rolling average)")  
+      }
+      
     } else if (val_scale == "logarithmic") {
-      paste0(lab_title, " (7-day rolling average, logarithmic scale)")
+      if (val_scale2 == "absolute") {
+        paste0(lab_title, " by province (7-day rolling average, logarithmic scale)")
+      } else if (val_scale2 == "per-capita") {
+        paste0(lab_title, " per 100,000 by province (7-day rolling average, logarithmic scale)")
+      }
+      
     }
   }
   
@@ -1503,7 +1513,7 @@ server <- function(input, output, session) {
   plot_flattening <- function(fun_data, var_date, var_val, lab_y, val_scale = input$scale_flattening) {
     
     ### don't run without inputs defined
-    req(input$scale_flattening)
+    req(input$scale_flattening, input$scale_trends)
     
     ### get data
     dat <- fun_data
@@ -1512,11 +1522,23 @@ server <- function(input, output, session) {
     dat <- dat %>%
       filter(province != "Repatriated")
     
-    ### calculate 7-day rolling average
-    dat <- dat %>%
-      group_by(province) %>%
-      mutate(roll_avg = rollapply(!!sym(var_val), 7, mean, align = "right", partial = TRUE)) %>%
-      ungroup
+    if (input$scale_trends == "per-capita") {
+      ### calculate 7-day rolling average
+      dat <- dat %>% 
+        group_by(province) %>% 
+        dplyr::mutate(roll_avg_per_capita := !!sym(var_val) / pop * 100000,
+                      roll_avg = rollapply(roll_avg_per_capita, 7, mean, align = "right", partial = TRUE)
+                      ) %>% 
+        ungroup()
+      
+    } else if (input$scale_trends == "absolute") {
+      ### calculate 7-day rolling average
+      dat <- dat %>%
+        group_by(province) %>%
+        mutate(roll_avg = rollapply(!!sym(var_val), 7, mean, align = "right", partial = TRUE)) %>%
+        ungroup()
+      
+    }
     
     ### plot data
     dat %>%
@@ -1544,11 +1566,11 @@ server <- function(input, output, session) {
   }
   
   ## cases
-  output$title_flattening_cases <- renderText({title_flattening("Daily reported cases by province")})
+  output$title_flattening_cases <- renderText({title_flattening("Daily reported cases")})
   output$plot_flattening_cases <- renderPlotly({plot_flattening(data_ts_cases(), "date_report", "cases", "Daily reported cases")})
   
   ## mortality
-  output$title_flattening_mortality <- renderText({title_flattening("Daily reported deaths by province")})
+  output$title_flattening_mortality <- renderText({title_flattening("Daily reported deaths")})
   output$plot_flattening_mortality <- renderPlotly({plot_flattening(data_ts_mortality(), "date_death_report", "deaths", "Daily reported deaths")})
   
   ## daily doses administered (7-day rolling average)
