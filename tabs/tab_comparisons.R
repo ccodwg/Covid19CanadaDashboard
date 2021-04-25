@@ -1,7 +1,10 @@
 tab_comparisons <- tabItem(tabName = "tab_comparisons",
                            fluidPage(
-                             p(HTML("The <b>Comparisons</b> tab is intended to provide recent average <b>daily</b> values for cases, deaths, and testing by province. These values are available as either raw numbers (absolute scale) or adjusted for population (per-capita scale). For example, the 7-day average for daily per-capita cases indicates the average number of new cases reported <b>each day</b> in a province over the past 7 days.")),
+                             p(HTML("<center><b><h1 style='font-size:27px'>Provincial Comparisons</h1></b></center><br>The <b>Comparisons</b> tab is intended to provide recent average <b>daily</b> values for cases, deaths, and testing by province. These values are available as either raw numbers (absolute scale) or adjusted for population (per-capita scale). For example, the 7-day average for daily per-capita cases indicates the average number of new cases reported <b>each day</b> in a province over the past 7 days.</p>")),
                              fluidRow(
+                               HTML("<br>"), # blank line
+                               p(HTML(
+                                 paste0("<center><b><h1 style='font-size:27px'>COVID-19 Cases</h1></b></center>"))),
                                box(
                                  title = textOutput("title_comp_cases"),
                                  width = 9,
@@ -26,6 +29,10 @@ tab_comparisons <- tabItem(tabName = "tab_comparisons",
                                )
                              ),
                            fluidRow(
+                             HTML("<br>"), # blank line
+                             p(HTML(
+                               paste0("<center><b><h1 style='font-size:27px'>COVID-19 Mortality</h1></b></center>"))),
+                             
                              box(
                                title = textOutput("title_comp_mortality"),
                                width = 9,
@@ -50,6 +57,10 @@ tab_comparisons <- tabItem(tabName = "tab_comparisons",
                              )
                            ),
                            fluidRow(
+                             HTML("<br>"), # blank line
+                             p(HTML(
+                               paste0("<center><b><h1 style='font-size:27px'>COVID-19 Testing</h1></b></center>"))),
+                             
                              box(
                                title = textOutput("title_comp_testing"),
                                width = 9,

@@ -1,5 +1,7 @@
 tab_testing <- tabItem(tabName = "tab_testing",
-                       fluidPage(tabsetPanel(
+                       fluidPage(
+                         
+                         tabsetPanel(
                          type = "tabs",
                          tabPanel("Daily testing",
                                   fluidRow(box(
@@ -31,5 +33,7 @@ tab_testing <- tabItem(tabName = "tab_testing",
                                     )
                                   ))),
                          p("Provinces occasionally report negative cumulative testing numbers. We aim to reconcile these inconsistencies in future data updates, if possible."),
-                         fluidRow(DTOutput("table_info_testing"))
+                         fluidRow(
+                           HTML(paste0("<br><center><b><h1 style='font-size:27px'>Specific Testing Metrics Used by Province/Territory</h1></b></center>")),
+                           DTOutput("table_info_testing"))
                        )))
