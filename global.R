@@ -116,6 +116,25 @@ for (i in c("cases", "ts_variants", "mortality", "ts_cases", "ts_mortality", "ts
 }
 
 
+# if VOC data missing, add 0 to dates missing so that dashboard works
+
+dash.date <- max(cases_2021$date_report)
+voc.date <- max(ts_variants$date_report)
+
+if(dash.date != voc.date) {
+  ts_variants_add <- ts_variants[(ts_variants$date_report==voc.date),]
+  ts_variants_add$date_report <- dash.date
+  ts_variants_add$variant_cases <- 0
+  ts_variants_add$cumulative_variant_cases <- ts_variants_add$cumulative_variant_cases
+  ts_variants <- rbind(ts_variants,ts_variants_add)
+  
+  ts_variants_can_add <- ts_variants_canada[(ts_variants_canada$date_report==voc.date),]
+  ts_variants_can_add$date_report <- dash.date
+  ts_variants_can_add$variant_cases <- 0
+  ts_variants_can_add$cumulative_variant_cases <- ts_variants_can_add$cumulative_variant_cases
+  ts_variants_canada <- rbind(ts_variants_canada,ts_variants_can_add)
+}
+
 
 ## make separate df for variant cases (to pull data for summary tables)
 
