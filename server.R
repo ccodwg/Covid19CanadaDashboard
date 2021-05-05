@@ -2451,6 +2451,10 @@ server <- function(input, output, session) {
                                             cumulative_dvaccine_max,
                                             cumulative_dvaccine_smooth) # avoid smoothed values larger than true max value
         )
+    ### make sure final value of smoothed distribution is not smaller than true maximum
+    if (dat[nrow(dat), "cumulative_dvaccine_smooth"] < cumulative_dvaccine_max) {
+      dat[nrow(dat), "cumulative_dvaccine_smooth"] <- cumulative_dvaccine_max
+    }
     
     ### calculate 7-day average vaccine administration
     admin_avg <- dat %>%
