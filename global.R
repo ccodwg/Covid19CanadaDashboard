@@ -129,6 +129,18 @@ if(dash.date != voc.date) {
   ts_variants <- rbind(ts_variants,ts_variants_add)
 }
 
+dash.can.date <- max(ts_cases_canada$date_report)
+voc.can.date <- max(ts_variants_canada$date_report)
+
+if(dash.can.date != voc.can.date) {
+
+  ts_variants_can_add <- ts_variants_canada[(ts_variants_canada$date_report==voc.date),]
+  ts_variants_can_add$date_report <- dash.date
+  ts_variants_can_add$variant_cases <- 0
+  ts_variants_can_add$cumulative_variant_cases <- ts_variants_can_add$cumulative_variant_cases
+  ts_variants_canada <- rbind(ts_variants_canada,ts_variants_can_add)
+}
+
 
 ## make separate df for variant cases (to pull data for summary tables)
 
