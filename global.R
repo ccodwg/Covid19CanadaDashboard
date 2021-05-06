@@ -127,12 +127,6 @@ if(dash.date != voc.date) {
   ts_variants_add$variant_cases <- 0
   ts_variants_add$cumulative_variant_cases <- ts_variants_add$cumulative_variant_cases
   ts_variants <- rbind(ts_variants,ts_variants_add)
-  
-  ts_variants_can_add <- ts_variants_canada[(ts_variants_canada$date_report==voc.date),]
-  ts_variants_can_add$date_report <- dash.date
-  ts_variants_can_add$variant_cases <- 0
-  ts_variants_can_add$cumulative_variant_cases <- ts_variants_can_add$cumulative_variant_cases
-  ts_variants_canada <- rbind(ts_variants_canada,ts_variants_can_add)
 }
 
 
