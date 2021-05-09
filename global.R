@@ -53,7 +53,8 @@ news <- paste(readLines("data/news.txt"), collapse = "\n")
 files <- matrix(
   c(
     "cases_2020", "data/cases_2020.csv",
-    "cases_2021", "data/cases_2021.csv",
+    "cases_2021_1", "data/cases_2021_1.csv",
+    "cases_2021_2", "data/cases_2021_2.csv",
     "mortality_2020", "data/mortality_2020.csv",
     "mortality_2021", "data/mortality_2021.csv",
     "ts_cases", "data/cases_timeseries_prov.csv",
@@ -102,7 +103,7 @@ for (i in 1:nrow(files)) {
 # process data
 
 ## merge individual-level data
-cases <- bind_rows(cases_2020, cases_2021)
+cases <- bind_rows(cases_2020, cases_2021_1, cases_2021_2)
 mortality <- bind_rows(mortality_2020, mortality_2021)
 
 ## ADDED: merge SK new HR with rest of HR data
