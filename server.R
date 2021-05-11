@@ -43,6 +43,12 @@ server <- function(input, output, session) {
     
   })
   
+  # when app stops, update file time of app.R
+  # trick to update cache: https://stackoverflow.com/a/55476883
+  onStop(function() {
+    Sys.setFileTime("app.R", now())
+  })
+  
   # tabs with sidebar controls
   sidebar_controls_tabs <- c(
     "tab_trends",
