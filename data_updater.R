@@ -75,8 +75,6 @@ unlink(paste(tempd, "Covid19Canada-master", sep = "/"), recursive = TRUE) # dele
 cat("\n", file = "data/news.txt")
 news <- try(fromJSON("https://api.github.com/repos/ccodwg/Covid19Canada/events"))
 if (!"try-error" %in% class(news)) {
-  news <- news$payload$commits
-  news <- news[lengths(news) != 0] # remove null elements
-  news <- news[[1]]$message # get most recent commit message
+  news <- news[[1]]$payload$commits[[1]]$message
   cat(paste0(news, "\n"), file = "data/news.txt")
 }
