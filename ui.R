@@ -11,10 +11,10 @@ js_get_width <-
 
 # ui
 ui <- function(req) {
-  dashboardPagePlus(
+  shinydashboardPlus::dashboardPage(
     title = "COVID-19 in Canada",
-    dashboardHeader(title = "COVID-19 in Canada"),
-    dashboardSidebar(
+    header = dashboardHeader(title = "COVID-19 in Canada"),
+    sidebar = dashboardSidebar(
       useShinyjs(),
       sidebarMenu(
         id = "tab",
@@ -58,7 +58,8 @@ ui <- function(req) {
         ),
         menuItem("Testing",
                  tabName = "tab_testing",
-                 icon = icon("vial")),
+                 icon = icon("vial")
+        ),
         menuItem(
           "About the data",
           tabName = "tab_about",
@@ -88,7 +89,7 @@ ui <- function(req) {
         )
       )
     ),
-    dashboardBody(
+    body = dashboardBody(
       meta() %>%
         meta_social(
           title = "COVID-19 in Canada",
@@ -136,11 +137,10 @@ ui <- function(req) {
         tab_about
       )
     ),
-    dashboardFooter(
-      left_text = HTML(
+    footer = dashboardFooter(
+      left = HTML(
         "Created by <a href='https://twitter.com/JPSoucy' target='_blank'> Jean-Paul R. Soucy</a> and <a href='https://twitter.com/ishaberry2' target='_blank'> Isha Berry</a>, Dalla Lana School of Public Health, University of Toronto. Developed by Jean-Paul R. Soucy, Isha Berry, <a href='https://twitter.com/benkcwong' target='_blank'> Ben Wong</a> and <a href='https://github.com/kbelisar' target='_blank'> Kyla Belisario</a>, with contributions from <a href='https://www.linkedin.com/in/wenyu-huang-11b211124/' target='_blank'> Wenyu Huang</a>, <a href='https://www.linkedin.com/in/angelinazhu' target='_blank'> Angelina Zhu</a>, <a href='https://github.com/mattwarkentin' target='_blank'> Matthew T. Warkentin</a> and <a href='https://mountainmath.ca/' target='_blank'> Jens von Bergmann</a>. Data curated by the <a href='https://opencovid.ca' target='_blank'> COVID-19 Canada Open Data Working Group</a> (see \"About the data\" for sources)."
       )
-    ),
-    sidebar_fullCollapse = TRUE
+    )
   )
 }
