@@ -12,7 +12,7 @@ tab_testing <- tabItem(tabName = "tab_testing",
                                   fluidRow(box(
                                     title = textOutput("title_cumulative_testing"),
                                     width = 10,
-                                    plotlyOutput("plot_cumulative_testing"),
+                                    plotlyOutput("plot_cumulative_testing")
                                   ),
                                   box(
                                     title = "More options",
