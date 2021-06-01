@@ -34,7 +34,7 @@ if (dir.exists(paste(tempd, "Covid19Canada-master", sep = "/"))) {
 ## copy other files
 if (dir.exists(paste(tempd, "Covid19Canada-master", sep = "/"))) {
   for (f in list.files(paste(tempd, "Covid19Canada-master", sep = "/"), recursive = TRUE, full.names = TRUE)[basename(list.files(paste(tempd, "Covid19Canada-master", sep = "/"), recursive = TRUE)) %in% c(
-    "age_map_cases.csv", "age_map_mortality.csv", "prov_map.csv", "hr_map.csv","hr_map_sk_new.csv"
+    "prov_map.csv", "hr_map.csv","hr_map_sk_new.csv"
   )]) {
     file_destination <- paste0("data/", basename(f))
     message("Copying: ", file_destination)

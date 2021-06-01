@@ -76,8 +76,6 @@ files <- matrix(
     "map_hr", "data/hr_map.csv",
     "map_prov", "data/prov_map.csv",
     "hr_map_sk_new", "data/hr_map_sk_new.csv",
-    "map_age_cases", "data/age_map_cases.csv",
-    "map_age_mortality", "data/age_map_mortality.csv",
     "info_testing", "text/info_testing.csv"
   ),
   byrow = TRUE,
