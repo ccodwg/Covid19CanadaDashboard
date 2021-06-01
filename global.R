@@ -52,11 +52,6 @@ news <- paste(readLines("data/news.txt"), collapse = "\n")
 ## list data files to be loaded
 files <- matrix(
   c(
-    "cases_2020", "data/cases_2020.csv",
-    "cases_2021_1", "data/cases_2021_1.csv",
-    "cases_2021_2", "data/cases_2021_2.csv",
-    "mortality_2020", "data/mortality_2020.csv",
-    "mortality_2021", "data/mortality_2021.csv",
     "ts_cases", "data/cases_timeseries_prov.csv",
     "ts_mortality", "data/mortality_timeseries_prov.csv",
     "ts_recovered", "data/recovered_timeseries_prov.csv",
@@ -102,10 +97,6 @@ for (i in 1:nrow(files)) {
 
 # process data
 
-## merge individual-level data
-cases <- bind_rows(cases_2020, cases_2021_1, cases_2021_2)
-mortality <- bind_rows(mortality_2020, mortality_2021)
-
 ## ADDED: merge SK new HR with rest of HR data
 
 ts_cases_new_hr <- bind_rows(ts_cases_hr[(ts_cases_hr$province!="Saskatchewan"),],ts_cases_new_hr)
@@ -130,7 +121,7 @@ ts_mortality_new_add_hr <- bind_rows(ts_mortality_new_add_hr,ts_mortality_new_hr
 
 
 ## add province short codes, full names, and populations to datasets
-for (i in c("cases", "mortality", "ts_cases", "ts_mortality", "ts_recovered", "ts_testing", "ts_active", "ts_vaccine_administration", "ts_vaccine_distribution", "ts_vaccine_completion")) {
+for (i in c("ts_cases", "ts_mortality", "ts_recovered", "ts_testing", "ts_active", "ts_vaccine_administration", "ts_vaccine_distribution", "ts_vaccine_completion")) {
   assign(
     i,
     get(i) %>%
@@ -141,63 +132,9 @@ for (i in c("cases", "mortality", "ts_cases", "ts_mortality", "ts_recovered", "t
   )
 }
 
-## process case data
-cases <- cases %>%
-  mutate(
-    age = factor(
-      recode(age, !!!setNames(map_age_cases$age_display, map_age_cases$age)),
-      c(
-        "<20",
-        "20-29",
-        "30-39",
-        "40-49",
-        "50-59",
-        "60-69",
-        "70-79",
-        "80-89",
-        "90-99",
-        "100+",
-        "NR"
-      )
-    ),
-    sex = factor(sex, c("Male", "Female", "Not Reported")),
-    travel_history_country = ifelse(travel_yn == 1 & travel_history_country == "", "Not Reported", travel_history_country),
-    route = factor(
-      case_when(
-        travel_yn == "1" ~ "Travel",
-        locally_acquired == "Close Contact" ~ "Close Contact",
-        locally_acquired == "Community" ~ "Community",
-        TRUE ~ "Not Reported"
-      ),
-      levels = c("Not Reported", "Community", "Close Contact", "Travel")
-    )
-  )
-
-## process mortality data
-mortality <- mortality %>%
-  mutate(
-    age = factor(
-      recode(age, !!!setNames(map_age_mortality$age_display, map_age_mortality$age)),
-      c(
-        "<20",
-        "20-29",
-        "30-39",
-        "40-49",
-        "50-59",
-        "60-69",
-        "70-79",
-        "80-89",
-        "90-99",
-        "100+",
-        "NR"
-      )
-    ),
-    sex = factor(sex, c("Male", "Female", "Not Reported"))
-  )
-
 # define common variables
-date_min <- min(cases$date_report, na.rm = TRUE)
-date_max <- max(cases$date_report, na.rm = TRUE)
+date_min <- min(ts_cases$date_report, na.rm = TRUE)
+date_max <- max(ts_cases$date_report, na.rm = TRUE)
 
 # define common plot elements
 

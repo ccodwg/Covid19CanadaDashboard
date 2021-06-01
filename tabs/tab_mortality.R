@@ -34,12 +34,5 @@ tab_mortality <- tabItem(tabName = "tab_mortality",
                                       title = textOutput("title_pie_mortality"),
                                       width = 12,
                                       plotlyOutput("plot_pie_mortality")
-                                    ))),
-                           tabPanel("Demographics",
-                                    fluidRow(box(
-                                      title = textOutput("title_demographics_mortality"),
-                                      width = 12,
-                                      plotlyOutput("plot_demographics_mortality")
-                                    )),
-                                    p("Note that cases with unreported sex are hidden by default."))
+                                    )))
                          )))
