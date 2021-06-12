@@ -396,7 +396,7 @@ server <- function(input, output, session) {
   
   ## people fully vaccinated
   output$value_box_summary_fully_vaccinated <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative people fully vaccinated", "People fully vaccinated (new)", "People fully vaccinated", "aqua", update_type = "new", val_cum_format = "thousand")
+    value_box_summary(table_overview, "Cumulative people fully vaccinated", "People fully vaccinated (new)", "People fully vaccinated", "aqua", update_type = "new", val_cum_format = "million")
   })
   
   ## hospitalized
