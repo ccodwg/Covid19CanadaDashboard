@@ -80,19 +80,32 @@ format_value_html <- function(.number) {
   
 }
 
-format_secondary <- function(.number, .secondary_type) {
+format_secondary <- function(.number, .secondary_type, .color) {
   
   if (.secondary_type == "new") {
     
-    format_new(.number)
+    secondary_formatted <- format_new(.number)
     
   } else if (.secondary_type == "change") {
     
-    format_change(.number)
+    secondary_formatted <- format_change(.number)
     
   } else {
     
     stop("Invalid value of .secondary_type")
+    
+  }
+  
+  if (.color == "white") {
+        
+    div(
+      secondary_formatted, 
+      style = "color: black;"
+    )
+    
+  } else {
+    
+    div(secondary_formatted)
     
   }
   

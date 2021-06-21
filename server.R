@@ -342,7 +342,7 @@ server <- function(input, output, session) {
       format_value_html()
     
     val_update <- table_overview %>% filter(Province == "Canada") %>% pull(var_update) |> 
-      format_secondary(update_type)
+      format_secondary(update_type, colour_box)
     
     valueBox(
       value = val_cum,
