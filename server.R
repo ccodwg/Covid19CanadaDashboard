@@ -81,11 +81,12 @@ server <- function(input, output, session) {
   
   # render sidebar
   output$sidebar_controls <- renderUI({
-    list(
+    tagList(
       selectInput(
         "prov",
         "Province",
-        choices = sidebar_provs
+        choices = sidebar_provs,
+        width = "100%"
       ),
       dateRangeInput(
         "date_range",
@@ -94,7 +95,8 @@ server <- function(input, output, session) {
         end = date_max,
         min = date_min,
         max = date_max,
-        format = "yyyy/mm/dd"
+        format = "yyyy/mm/dd",
+        width = "100%"
       )
     )
   })
@@ -308,7 +310,8 @@ server <- function(input, output, session) {
   output$table_info_testing <- renderDT({
     info_testing %>%
       datatable(
-        class = "stripe compact hover",
+        class = "compact hover",
+        style = "bootstrap4",
         rownames = FALSE,
         escape = FALSE,
         options = list(
@@ -324,7 +327,7 @@ server <- function(input, output, session) {
   # summary numbers for overview tab
   
   ## function: summary numbers for overview tab
-  value_box_summary <- function(table_overview, var_cum, var_update, lab_title, colour_box, update_type = c("new", "change"), val_cum_format = c("raw", "thousand", "million"), font_size_update = "40%") {
+  value_box_summary <- function(table_overview, var_cum, var_update, lab_title, colour_box, update_type = c("new", "change"), val_cum_format = c("raw", "thousand", "million"), font_size_update = "40%", icon) {
     
     ### check update type (new or change +/-)
     match.arg(update_type, c("new", "change", several.ok = FALSE))
@@ -335,78 +338,62 @@ server <- function(input, output, session) {
     ### calculate values
     val_cum <- table_overview %>%
       filter(Province == "Canada") %>%
-      pull(var_cum) %>%
-      {
-        if (val_cum_format == "raw") {
-          formatC(., format = "f", digits = 0, big.mark = ",")
-          } else if (val_cum_format == "thousand") {
-            paste0(formatC(. / 1000, digits = 0, format = "f", big.mark = ","), "k")
-          } else if (val_cum_format == "million") {
-          paste0(formatC(. / 1000000, digits = 2, format = "f", big.mark = ","), "m")
-        }
-      }
-    val_update <- table_overview %>% filter(Province == "Canada") %>% pull(var_update)
+      pull(var_cum) |> 
+      format_value_html()
     
-    ### value box
-    HTML(paste0(
-      tags$p(val_cum, style = "font-size: 95%;"),
-      "<div style='font-size:",
-      font_size_update,
-      "'>(",
-      {if (update_type == "new") {
-        paste0(
-          format(val_update, big.mark = ","),
-          " new)</div>"
-        )
-      } else {
-        paste0(
-          "Change: ",
-          if (val_update >= 0) "+" else "",
-          format(val_update, big.mark = ","),
-          ")</div>"
-        )}})) %>%
-      valueBox(lab_title,
-               color = colour_box)
+    val_update <- table_overview %>% filter(Province == "Canada") %>% pull(var_update) |> 
+      format_secondary(update_type)
+    
+    valueBox(
+      value = val_cum,
+      subtitle = h5(lab_title),
+      footer = val_update,
+      color = colour_box,
+      icon = icon,
+      gradient = TRUE,
+      elevation = 1,
+      width = NULL
+    )
   }
   
   ## cases
   output$value_box_summary_cases <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative cases", "Cases (new)", "Reported cases", "orange", update_type = "new", val_cum_format = "thousand")
+    value_box_summary(table_overview, "Cumulative cases", "Cases (new)", "Reported cases", "info", update_type = "new", val_cum_format = "thousand", icon = icon("calendar-plus"))
   })
   
   ## active cases
   output$value_box_summary_active <- renderValueBox({
-    value_box_summary(table_overview, "Active cases", "Active cases (change)", "Active cases", "purple", update_type = "change", val_cum_format = "raw")
+    value_box_summary(table_overview, "Active cases", "Active cases (change)", "Active cases", "danger", update_type = "change", val_cum_format = "raw", icon = icon("virus"))
   })
   
   ## recovered
   output$value_box_summary_recovered <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative recovered", "Recovered (new)", "Total recovered", "light-blue", update_type = "new", val_cum_format = "thousand")
+    value_box_summary(table_overview, "Cumulative recovered", "Recovered (new)", "Total recovered", "success", update_type = "new", val_cum_format = "thousand", icon = icon("file-medical"))
   })
   
   ## mortality
   output$value_box_summary_mortality <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative deaths", "Deaths (new)", "Total deaths", "navy", update_type = "new", val_cum_format = "raw")
+    value_box_summary(table_overview, "Cumulative deaths", "Deaths (new)", "Total deaths", "gray-dark", update_type = "new", val_cum_format = "raw", icon = icon("heartbeat"))
   })
   
   ## vaccine doses administered
   output$value_box_summary_doses_administered <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative vaccine doses administered", "Vaccine doses administered (new)", "Vaccine doses administered", "fuchsia", update_type = "new", val_cum_format = "million")
+    value_box_summary(table_overview, "Cumulative vaccine doses administered", "Vaccine doses administered (new)", "Vaccine doses administered", "teal", update_type = "new", val_cum_format = "million", icon = icon("syringe"))
   })
   
   ## people fully vaccinated
   output$value_box_summary_fully_vaccinated <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative people fully vaccinated", "People fully vaccinated (new)", "People fully vaccinated", "aqua", update_type = "new", val_cum_format = "million")
+    value_box_summary(table_overview, "Cumulative people fully vaccinated", "People fully vaccinated (new)", "People fully vaccinated", "gray", update_type = "new", val_cum_format = "million", icon = icon("check"))
   })
   
   ## hospitalized
   output$value_box_summary_hosp <- renderValueBox({
-    value_box_summary(table_overview, "Hospitalized", "Hospitalized (change)", "Hospitalized", "maroon", update_type = "change", val_cum_format = "raw")
+    value_box_summary(table_overview, "Hospitalized", "Hospitalized (change)", "Hospitalized", "white", update_type = "change", val_cum_format = "raw", icon = icon("hospital"))
   })
   
   ## testing
   output$value_box_summary_testing <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative testing", "Testing (new)", "Total testing", "olive", update_type = "new", val_cum_format = "million")
+    value_box_summary(table_overview, "Cumulative testing", "Testing (new)", "Total testing", "gray", update_type = "new", val_cum_format = "million", icon = icon("eye-dropper"))
   })
   
   # label nudger for overview tab choropleth maps
@@ -1461,7 +1448,8 @@ server <- function(input, output, session) {
                 by = c("Province" = "province")) %>%
       mutate(Province = coalesce(province_short, Province)) %>%
       select(-province_short) %>%
-      DT::datatable(class = "stripe compact hover", rownames = FALSE, extensions = "FixedColumns",
+      DT::datatable(class = "stripe compact hover", rownames = FALSE, 
+                    style = "bootstrap4",
                     options = list(
                       paging = FALSE,
                       searching = FALSE,
@@ -1469,9 +1457,7 @@ server <- function(input, output, session) {
                       compact = TRUE,
                       autoWidth = TRUE,
                       ### centre all but the first column
-                      columnDefs = list(list(className = 'dt-center', targets = 1:(ncol(.) - 1))),
-                      ### freeze province column
-                      fixedColumns = list(leftColumns = 1)
+                      columnDefs = list(list(className = 'dt-center', targets = 1:(ncol(.) - 1)))
                     )) %>%
       formatRound(columns = c("Cumulative cases", "Cases (new)", "Active cases", "Active cases (change)", "Cumulative vaccine doses administered", "Vaccine doses administered (new)", "Cumulative people fully vaccinated", "People fully vaccinated (new)", "Hospitalized", "Hospitalized (change)", "Cumulative deaths", "Deaths (new)", "Cumulative recovered", "Recovered (new)", "Cumulative testing", "Testing (new)"), digits = 0) %>%
       formatRound(columns = c("Cases (new) per 100k", "Cumulative cases per 100k", "Active cases per 100k", "Hospitalized per 100k", "Cumulative deaths per 100k"), digits = 1) %>%
@@ -2880,9 +2866,9 @@ server <- function(input, output, session) {
         !!paste0("Expected date to reach ", input$pct_vaccination, "% fully vaccinated", "<sup> b</sup>") := date_to_vaxx)
     
     table_time_to_pct_vaccination %>%
-      DT::datatable(class = "stripe compact hover", 
+      DT::datatable(class = "compact hover", 
+                    style = "bootstrap4",
                     rownames = FALSE, 
-                    extensions = "FixedColumns",
                     escape = FALSE,
                     caption = tags$caption(
                       style = "caption-side: bottom; text-align: left; margin: 8px 0;",
@@ -2897,9 +2883,7 @@ server <- function(input, output, session) {
                       compact = TRUE,
                       autoWidth = TRUE,
                       ### centre all but the first column
-                      columnDefs = list(list(className = 'dt-center', targets = 1:(ncol(.) - 1))),
-                      ### freeze province column
-                      fixedColumns = list(leftColumns = 1:(ncol(.) - 1))
+                      columnDefs = list(list(className = 'dt-center', targets = 1:(ncol(.) - 1)))
                     )) %>%
       formatRound(columns = c("Population", "Total doses administered", "Remaining doses needed<sup> a</sup>"), digits = 0) %>%
       formatRound(columns = "7-day rolling average of doses administered", digits = 1)

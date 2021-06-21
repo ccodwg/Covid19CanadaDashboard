@@ -2,12 +2,14 @@
 
 ## dashboard
 library(shiny)
-library(shinydashboard)
-library(shinydashboardPlus)
+library(bs4Dash)
 library(shinyjs)
 library(shinyalert) # display pop-ups
 library(metathis)
 library(rsconnect)
+library(waiter)
+library(fresh)
+library(reactable)
 
 ## data manipulation
 library(Hmisc) # load before other packages due to namespace conflicts
