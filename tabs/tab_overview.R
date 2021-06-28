@@ -1,24 +1,16 @@
 tab_overview <- tabItem(tabName = "tab_overview",
                         fluidPage(
                               fluidRow(
-                                column(
-                                  width = 8,
-                                  offset = 2,
                                   valueBoxOutput("value_box_summary_cases", width = 3),
                                   valueBoxOutput("value_box_summary_active", width = 3),
                                   valueBoxOutput("value_box_summary_recovered", width = 3),
-                                  valueBoxOutput("value_box_summary_mortality", width = 3),
-                                )
+                                  valueBoxOutput("value_box_summary_mortality", width = 3)
                               ),
                               fluidRow(
-                                column(
-                                  width = 8,
-                                  offset = 2,
                                   valueBoxOutput("value_box_summary_doses_administered", width = 3),
                                   valueBoxOutput("value_box_summary_fully_vaccinated", width = 3),
                                   valueBoxOutput("value_box_summary_hosp", width = 3),
                                   valueBoxOutput("value_box_summary_testing", width = 3)
-                                )
                               ),
                               column(includeHTML("text/vaccine_text.html"), width = 12, align = "center"),
                               p(HTML("<br><br>")),

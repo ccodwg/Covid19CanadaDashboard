@@ -11,10 +11,20 @@ js_get_width <-
 
 # ui
 ui <- function(req) {
-  shinydashboardPlus::dashboardPage(
+  dashboardPage(
+    freshTheme = fresh_theme(),
     title = "COVID-19 in Canada",
-    header = dashboardHeader(title = "COVID-19 in Canada"),
+    preloader = preloader_spinner(),
+    fullscreen = TRUE,
+    scrollToTop = TRUE,
+    dark = TRUE,
+    header = dashboardHeader(
+      title = "COVID-19 in Canada",
+      fixed = TRUE,
+      border = FALSE
+    ),
     sidebar = dashboardSidebar(
+      skin = "light",
       useShinyjs(),
       sidebarMenu(
         id = "tab",
@@ -76,20 +86,14 @@ ui <- function(req) {
               "</b><br/><br/>All data used to produce this<br/>dashboard are exclusively<br/>collected from publicly available<br/>sources including government<br/>reports and news media.<br/>"
             )
           ),
-          align = "left",
-          style = "
-              position:absolute;
-              width:100%;
-              height:0px;
-              color: white;
-              padding: 10px;
-              background-color: transparent;
-              word-wrap: break-word;
-              z-index: 1000;"
+          align = "left"
         )
       )
     ),
     body = dashboardBody(
+      
+      fresh::use_googlefont("Lato"),
+      
       meta() %>%
         meta_social(
           title = "COVID-19 in Canada",
