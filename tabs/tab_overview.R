@@ -85,7 +85,7 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                       uiOutput("ui_window_choropleth_overview_vaccine_full_pct"),
                                     )
                                   ))),
-                              HTML("<br>"), # blank line
+                              HTML("<br><br>"), # blank line
                               p(HTML(
                                 paste0("<center><b><h1 style='font-size:27px'>Daily COVID-19 Trends</h1></b></center>"))),
                                 tabsetPanel(
@@ -111,8 +111,7 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                       plotlyOutput("plot_flattening_avaccine"),
                                       width = 12))
                                 )
-                                )
-                              ),
+                                ),
                               box(
                                 title = NULL,
                                 width = 12,
@@ -124,6 +123,45 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                   selected = "linear",
                                   inline = TRUE
                                 )),
+                              HTML("<br>"), # blank line
+                              p(HTML(
+                                paste0("<center><b><h1 style='font-size:27px'>14-Day COVID-19 Trends</h1></b></center>"))),
+                              tabsetPanel(
+                                type = "tabs",
+                                tabPanel(
+                                  "Cases",
+                                  fluidRow(box(
+                                    title = textOutput("title_trends_cases"),
+                                    plotlyOutput("plot_trends_cases"),
+                                    width = 12))
+                                ),
+                                tabPanel(
+                                  "Mortality",
+                                  fluidRow(box(
+                                    title = textOutput("title_trends_mortality"),
+                                    plotlyOutput("plot_trends_mortality"),
+                                    width = 12))
+                                ),
+                                tabPanel(
+                                  "Daily doses administered",
+                                  fluidRow(box(
+                                    title = textOutput("title_trends_avaccine"),
+                                    plotlyOutput("plot_trends_avaccine"),
+                                    width = 12))
+                                )
+                              ),
+                              box(
+                                title = NULL,
+                                width = 12,
+                                align = "center",
+                                radioButtons(
+                                  "scale_trends",
+                                  "Scale",
+                                  choices = c("Linear" = "linear", "Logarithmic" = "logarithmic"),
+                                  selected = "linear",
+                                  inline = TRUE
+                                )),
+                              ),
                               HTML("<center>These charts may be viewed on a <b>linear scale</b> (the default) or a <b>logarithmic scale</b>. The choice of scale changes the interpretation of the plot. Select the scale using the button above. Additionally, the time range of data displayed may be changed using the range slider below the plot. By default, the entire range of data is shown.</center>"),
                               tags$p(""), # blank line
                               htmlOutput({"text_flattening"}),

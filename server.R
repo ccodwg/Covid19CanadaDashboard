@@ -2906,4 +2906,132 @@ server <- function(input, output, session) {
     
   })
   
+  ## title_trends
+  title_trends <- function(lab_title, val_scale = input$scale_trends){
+    ### don't run without inputs defined
+    req(input$scale_trends)
+    
+    ### render title
+    if (val_scale == "linear") {
+      paste0(lab_title, " (7-day rolling average)")
+    } else if (val_scale == "logarithmic") {
+      paste0(lab_title, " (7-day rolling average, logarithmic scale)")
+    }
+  }
+  
+  ## plot_trends
+  plot_trends <- function(fun_data, var_date, var_val, lab_y, val_scale = input$scale_trends){
+    
+    ### don't run without inputs defined
+    req(input$scale_trends)
+    
+    ### get data
+    dat <- fun_data
+    
+    ### process data
+    dat <- dat %>%
+      filter(province != "Repatriated")
+    
+    ### calculate 7-day rolling average
+    dat <- dat %>%
+      group_by(province) %>%
+      mutate(roll_avg = rollapply(!!sym(var_val), 7, mean, align = "right", partial = TRUE),
+             date = as.Date(!!sym(var_date))) %>%
+      ungroup()
+    
+    if (val_scale == "per-capita") {
+      dat <- dat %>% 
+        group_by(province_short) %>% 
+        mutate(!!sym(var_val) := !!sym(var_val) / pop * 100000) %>% 
+        ungroup()
+    }
+    
+    # process data
+    trends <- dat %>%
+      filter(province != "Repatriated") %>% 
+      group_by(province) %>%
+      slice_tail(n = 14) %>%
+      mutate(
+        roll_avg_trend = gam(roll_avg ~ s(as.integer(date))) %>% fitted()
+      ) %>%
+      mutate(
+        roll_avg_trend = ifelse(roll_avg_trend < 0, 0, roll_avg_trend * 7),
+        roll_avg_increasing = factor(ifelse(last(roll_avg_trend) > first(roll_avg_trend), 1, 0), levels = c(1, 0), labels = c("Increasing", "Decreasing")),
+      ) %>% 
+      ungroup()
+    
+    # trends$date <- trends[[var_date]]
+    trends[trends$date %in% c(min(trends$date), max(trends$date)), "first_last"] <- 1
+    trends_df <- trends %>%
+      select(province, date, roll_avg_trend, roll_avg_increasing, first_last) %>%
+      mutate(sort_val = last(roll_avg_trend)) %>%
+      arrange(roll_avg_increasing, desc(sort_val)) %>%
+      ungroup %>%
+      {mutate(., index = 1:nrow(.))} %>%
+      # add a space in the index between provinces
+      mutate(index = index + rep(0:12, each = 14))
+    
+    ### 14-day trends plot
+    plot_ly() %>%
+      add_lines(
+        data = trends_df %>% group_by(province),
+        type = "scatter",
+        mode = "lines",
+        x = ~ index,
+        y = ~ roll_avg_trend,
+        color = ~ roll_avg_increasing,
+        colors = c("red", "#1f77b4"),
+        text = paste0("<b>",
+                      trends_df$province,
+                      ": ",
+                      sprintf("%.1f", trends_df$roll_avg_trend),
+                      "</b><extra>",
+                      trends_df$roll_avg_increasing,
+                      "</extra>"),
+        hovertemplate = "%{text}"
+      ) %>%
+      add_markers(
+        data = trends_df %>% filter(first_last == 1),
+        x = ~index,
+        y = ~roll_avg_trend,
+        color = ~roll_avg_increasing,
+        colors = c("red", "#1f77b4"),
+        text = paste0("<b>",
+                      trends_df %>% filter(first_last == 1) %>% pull(province),
+                      ": ",
+                      sprintf("%.1f", trends_df %>% filter(first_last == 1) %>% pull(roll_avg_trend)),
+                      "</b><extra>",
+                      trends_df %>% filter(first_last == 1) %>% pull(roll_avg_increasing),
+                      "</extra>"),
+        hovertemplate = "%{text}"
+      ) %>%
+      layout(
+        showlegend = FALSE,
+        xaxis = list(
+          title = FALSE,
+          ticktext = as.list(trends_df %>% pull(province) %>% unique()),
+          tickvals = as.list(seq.int(from = 7, to = 7 + 12 * 15, by = 15)),
+          tickmode = "array",
+          fixedrange = TRUE
+        ),
+        yaxis = {if (val_scale == "logarithmic") list(type = "log", title = lab_y, fixedrange = TRUE) else list(title = lab_y, fixedrange = TRUE)}
+      ) %>%
+      config(
+        displayModeBar = FALSE
+      )
+    
+  }
+  
+  ## 14-day case trends
+  output$title_trends_cases <- renderText({title_trends("Daily reported cases by province")})
+  output$plot_trends_cases <- renderPlotly({plot_trends(data_ts_cases(), "date_report", "cases", "Daily reported cases")})
+  
+  ## 14-day mortality trends
+  output$title_trends_mortality <- renderText({title_trends("Daily reported deaths by province")})
+  output$plot_trends_mortality <- renderPlotly({plot_trends(data_ts_mortality(), "date_death_report", "deaths", "Daily reported deaths")})
+   
+  ## 14-day daily doses administered trends
+  output$title_trends_avaccine <- renderText({title_trends("Daily vaccine doses administered")})
+  output$plot_trends_avaccine <- renderPlotly({plot_trends(data_ts_vaccine_administration(), "date_vaccine_administered", "avaccine", "Daily vaccine doses administered")})
+  
 }
