@@ -123,6 +123,12 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                   choices = c("Linear" = "linear", "Logarithmic" = "logarithmic"),
                                   selected = "linear",
                                   inline = TRUE
+                                ),
+                                radioButtons(
+                                  "scale_trends",
+                                  "Absolute/per-capita",
+                                  choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
+                                  selected = "absolute"
                                 )),
                               HTML("<center>These charts may be viewed on a <b>linear scale</b> (the default) or a <b>logarithmic scale</b>. The choice of scale changes the interpretation of the plot. Select the scale using the button above. Additionally, the time range of data displayed may be changed using the range slider below the plot. By default, the entire range of data is shown.</center>"),
                               tags$p(""), # blank line
