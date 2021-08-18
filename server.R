@@ -436,32 +436,41 @@ server <- function(input, output, session) {
   output$title_choropleth_overview_cases <- renderText({
     
     ### don't run without inputs defined
-    req(input$window_choropleth_overview_cases)
+    req(input$window_choropleth_overview_cases, input$scale_choropleth_overview_cases)
     
     ### render text
-    paste("Reported cases by province/territory in the last", input$window_choropleth_overview_cases, "days")
+    if (input$scale_choropleth_overview_cases == "per-capita") {
+      paste("Reported cases per 100,000 by province/territory in the last", input$window_choropleth_overview_cases, "days")
+    } else {
+      paste("Reported cases by province/territory in the last", input$window_choropleth_overview_cases, "days")  
+    }
+    
   })
   
   # province case map for overview tab
   output$plot_choropleth_overview_cases <- renderPlotly({
     
     ### don't run without inputs defined
-    req(input$window_choropleth_overview_cases)
+    req(input$window_choropleth_overview_cases, input$scale_choropleth_overview_cases)
     
     ### join provincial case numbers for relevant window to provincial map
+    ### Add per-capita values for toggle
     dat <- geo_prov_simple %>%
       left_join(
         data_ts_cases() %>%
-          select(province_short, cases) %>%
+          select(province_short, cases, pop) %>%
           group_by(province_short) %>%
           slice_tail(n = input$window_choropleth_overview_cases) %>%
-          summarize(cases = sum(cases), .groups = "drop"),
+          summarize(cases = sum(cases),
+                    cases_per_capita = cases / pop * 100000,
+                    .groups = "drop"),
         by = "province_short"
       )
     
     ### even out colour scale by rooting case numbers
     dat <- dat %>%
-      mutate(cases_colour = cases^(1/3))
+      mutate(cases_colour = cases^(1/3),
+             cases_per_capita_colour = cases_per_capita^(1/3))
     
     ### define value labels
     labs <- data.frame(
@@ -469,12 +478,24 @@ server <- function(input, output, session) {
       x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
       lab_cases = format(dat[["cases"]], big.mark = ",", trim = TRUE),
+      lab_cases_per_capita = format(dat[["cases_per_capita"]], big.mark = ",", trim = TRUE),
       ### arrows for NS, NB, PE to avoid overlap
       show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
       arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
       stringsAsFactors = FALSE
     )
+  
+    if (input$scale_choropleth_overview_cases == "per-capita") {
+      labs <- labs %>%
+        mutate(
+          lab_cases = format(dat[["cases_per_capita"]] %>% round(1), big.mark = ",", trim = TRUE)
+        )
+      dat <- dat %>% 
+        mutate(
+          cases_colour = cases_per_capita_colour
+        )
+    }
     
     ### nudge labels
     labs <- choropleth_label_nudger(labs)
@@ -507,6 +528,7 @@ server <- function(input, output, session) {
         axref = "x",
         ayref = "y"
       ) %>%
+      ### OLD PRE-TOGGLE
       layout(
         xaxis = axis_hide,
         yaxis = axis_hide,
@@ -514,9 +536,13 @@ server <- function(input, output, session) {
       ) %>%
       config(displaylogo = FALSE,
              ### hide all plotly buttons, since they do nothing here
-             displayModeBar = FALSE) %>%
+             displayModeBar = FALSE) %>% 
       hide_colorbar()
+    
   })
+  
+  
+  
   
   # render province case map for overview tab with dynamic width
   output$ui_plot_choropleth_overview_cases <- renderUI({
@@ -557,6 +583,16 @@ server <- function(input, output, session) {
         ),
         width = 12,
         align = "center"
+      ),
+      column(
+        width = 12,
+        align = "center",
+        radioButtons(
+              "scale_choropleth_overview_cases",
+              "Absolute/per-capita",
+              choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
+              selected = "absolute"
+        )
       )
     )
   })
@@ -568,32 +604,42 @@ server <- function(input, output, session) {
   output$title_choropleth_overview_deaths <- renderText({
     
     ### don't run without inputs defined
-    req(input$window_choropleth_overview_deaths)
+    req(input$window_choropleth_overview_deaths, input$scale_choropleth_overview_deaths)
     
     ### render text
-    paste("Reported deaths by province/territory in the last", input$window_choropleth_overview_deaths, "days")
+    if (input$scale_choropleth_overview_deaths == "per-capita") {
+      paste("Reported deaths per 100,000 by province/territory in the last", input$window_choropleth_overview_deaths, "days")
+    } else {
+      paste("Reported deaths by province/territory in the last", input$window_choropleth_overview_deaths, "days")  
+    }
+    
   })
   
   # province death map for overview tab
   output$plot_choropleth_overview_deaths <- renderPlotly({
     
     ### don't run without inputs defined
-    req(input$window_choropleth_overview_deaths)
+    req(input$window_choropleth_overview_deaths, 
+        input$scale_choropleth_overview_deaths)
     
     ### join provincial death numbers for relevant window to provincial map
+    ### Add per-capita values for toggle
     dat <- geo_prov_simple %>%
       left_join(
         data_ts_mortality() %>%
-          select(province_short, deaths) %>%
+          select(province_short, deaths, pop) %>%
           group_by(province_short) %>%
           slice_tail(n = input$window_choropleth_overview_deaths) %>%
-          summarize(deaths = sum(deaths), .groups = "drop"),
+          summarize(deaths = sum(deaths),
+                    deaths_per_capita = deaths / pop * 100000,
+                    .groups = "drop"),
         by = "province_short"
       )
     
     ### even out colour scale by rooting death numbers
     dat <- dat %>%
-      mutate(cases_colour = deaths^(1/3))
+      mutate(cases_colour = deaths^(1/3),
+             cases_per_capita_colour = deaths_per_capita^(1/3))
     
     ### define value labels
     labs <- data.frame(
@@ -601,12 +647,24 @@ server <- function(input, output, session) {
       x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
       lab_cases = format(dat[["deaths"]], big.mark = ",", trim = TRUE),
+      lab_cases_per_capita = format(dat[["deaths_per_capita"]], big.mark = ",", trim = TRUE),
       ### arrows for NS, NB, PE to avoid overlap
       show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
       arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
       stringsAsFactors = FALSE
     )
+    
+    if (input$scale_choropleth_overview_deaths == "per-capita") {
+      labs <- labs %>%
+        mutate(
+          lab_cases = format(dat[["deaths_per_capita"]] %>% round(1), big.mark = ",", trim = TRUE)
+        )
+      dat <- dat %>% 
+        mutate(
+          cases_colour = cases_per_capita_colour
+        )
+    }
     
     ### nudge labels
     labs <- choropleth_label_nudger(labs)
@@ -689,6 +747,16 @@ server <- function(input, output, session) {
         ),
         width = 12,
         align = "center"
+      ),
+      column(
+        width = 12,
+        align = "center",
+        radioButtons(
+          "scale_choropleth_overview_deaths",
+          "Absolute/per-capita",
+          choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
+          selected = "absolute"
+        )
       )
     )
   })
@@ -697,32 +765,44 @@ server <- function(input, output, session) {
   output$title_choropleth_overview_recovered <- renderText({
     
     ### don't run without inputs defined
-    req(input$window_choropleth_overview_recovered)
+    req(input$window_choropleth_overview_recovered,
+        input$scale_choropleth_overview_recovered)
     
     ### render text
-    paste("Reported recovered cases by province/territory in the last", input$window_choropleth_overview_recovered, "days")
+    if (input$scale_choropleth_overview_recovered == "per-capita") {
+      paste("Reported recovered cases per 100,000 by province/territory in the last", input$window_choropleth_overview_recovered, "days")
+    } else {
+      paste("Reported recovered cases by province/territory in the last", input$window_choropleth_overview_recovered, "days")  
+    }
+    
   })
   
   # province recovered map for overview tab
   output$plot_choropleth_overview_recovered <- renderPlotly({
     
     ### don't run without inputs defined
-    req(input$window_choropleth_overview_recovered)
+    req(input$window_choropleth_overview_recovered,
+        input$scale_choropleth_overview_recovered)
     
     ### join provincial recovered numbers for relevant window to provincial map
+    ### Add per-capita values for toggle
     dat <- geo_prov_simple %>%
       left_join(
         data_ts_recovered() %>%
-          select(province_short, recovered) %>%
+          select(province_short, recovered, pop) %>%
           group_by(province_short) %>%
           slice_tail(n = input$window_choropleth_overview_recovered) %>%
-          summarize(recovered = sum(recovered), .groups = "drop"),
+          summarize(recovered = sum(recovered),
+                    recovered_per_capita = recovered / pop * 100000,
+                    .groups = "drop"),
         by = "province_short"
       )
     
     ### even out colour scale by rooting recovered numbers
     dat <- dat %>%
-      mutate(cases_colour = recovered^(1/3))
+      mutate(cases_colour = recovered^(1/3),
+             cases_per_capita_colour = recovered_per_capita^(1/3)
+             )
     
     ### define value labels
     labs <- data.frame(
@@ -730,12 +810,24 @@ server <- function(input, output, session) {
       x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
       lab_cases = format(dat[["recovered"]], big.mark = ",", trim = TRUE),
+      lab_cases_per_capita = format(dat[["recovered_per_capita"]], big.mark = ",", trim = TRUE),
       ### arrows for NS, NB, PE to avoid overlap
       show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
       arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
       stringsAsFactors = FALSE
     )
+    
+    if (input$scale_choropleth_overview_recovered == "per-capita") {
+      labs <- labs %>%
+        mutate(
+          lab_cases = format(dat[["recovered_per_capita"]] %>% round(1), big.mark = ",", trim = TRUE)
+        )
+      dat <- dat %>% 
+        mutate(
+          cases_colour = cases_per_capita_colour
+        )
+    }
     
     ### nudge labels
     labs <- choropleth_label_nudger(labs)
@@ -818,6 +910,16 @@ server <- function(input, output, session) {
         ),
         width = 12,
         align = "center"
+      ),
+      column(
+        width = 12,
+        align = "center",
+        radioButtons(
+          "scale_choropleth_overview_recovered",
+          "Absolute/per-capita",
+          choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
+          selected = "absolute"
+        )
       )
     )
   })
@@ -826,32 +928,44 @@ server <- function(input, output, session) {
   output$title_choropleth_overview_vaccine_administration <- renderText({
     
     ### don't run without inputs defined
-    req(input$window_choropleth_overview_vaccine_administration)
+    req(input$window_choropleth_overview_vaccine_administration,
+        input$scale_choropleth_overview_vaccine_administration)
     
     ### render text
-    paste("Vaccine doses administered by province/territory in the last", input$window_choropleth_overview_vaccine_administration, "days")
+    if (input$scale_choropleth_overview_vaccine_administration == "per-capita") {
+      paste("Vaccine doses administered per 100,000 by province/territory in the last", input$window_choropleth_overview_vaccine_administration, "days")
+    } else {
+      paste("Vaccine doses administered by province/territory in the last", input$window_choropleth_overview_vaccine_administration, "days")  
+    }
+    
   })
   
   # province vaccine administration map for overview tab
   output$plot_choropleth_overview_vaccine_administration <- renderPlotly({
     
     ### don't run without inputs defined
-    req(input$window_choropleth_overview_vaccine_administration)
+    req(input$window_choropleth_overview_vaccine_administration,
+        input$scale_choropleth_overview_vaccine_administration)
     
     ### join provincial vaccine numbers for relevant window to provincial map
+    ### Add per-capita values for toggle
     dat <- geo_prov_simple %>%
       left_join(
         data_ts_vaccine_administration() %>%
-          select(province_short, avaccine) %>%
+          select(province_short, avaccine, pop) %>%
           group_by(province_short) %>%
           slice_tail(n = input$window_choropleth_overview_vaccine_administration) %>%
-          summarize(avaccine = sum(avaccine), .groups = "drop"),
+          summarize(avaccine = sum(avaccine), 
+                    avaccine_per_capita = avaccine / pop * 100000,
+                    .groups = "drop"),
         by = "province_short"
       )
-    
+  
     ### even out colour scale by rooting vaccine numbers
     dat <- dat %>%
-      mutate(cases_colour = avaccine^(1/3))
+      mutate(cases_colour = avaccine^(1/3),
+             cases_per_capita_colour = avaccine_per_capita^(1/3)
+             )
     
     ### define value labels
     labs <- data.frame(
@@ -859,12 +973,24 @@ server <- function(input, output, session) {
       x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
       lab_cases = format(dat[["avaccine"]], big.mark = ",", trim = TRUE),
+      lab_cases_per_capita = format(dat[["avaccine_per_capita"]], big.mark = ",", trim = TRUE),
       ### arrows for NS, NB, PE to avoid overlap
       show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
       arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
       stringsAsFactors = FALSE
     )
+    
+    if (input$scale_choropleth_overview_vaccine_administration == "per-capita") {
+      labs <- labs %>%
+        mutate(
+          lab_cases = format(dat[["avaccine_per_capita"]] %>% round(1), big.mark = ",", trim = TRUE)
+        )
+      dat <- dat %>% 
+        mutate(
+          cases_colour = cases_per_capita_colour
+        )
+    }
     
     ### nudge labels
     labs <- choropleth_label_nudger(labs)
@@ -947,6 +1073,16 @@ server <- function(input, output, session) {
         ),
         width = 12,
         align = "center"
+      ),
+      column(
+        width = 12,
+        align = "center",
+        radioButtons(
+          "scale_choropleth_overview_vaccine_administration",
+          "Absolute/per-capita",
+          choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
+          selected = "absolute"
+        )
       )
     )
   })
@@ -955,32 +1091,47 @@ server <- function(input, output, session) {
   output$title_choropleth_overview_vaccine_distribution <- renderText({
     
     ### don't run without inputs defined
-    req(input$window_choropleth_overview_vaccine_distribution)
+    req(input$window_choropleth_overview_vaccine_distribution,
+        input$scale_choropleth_overview_vaccine_distribution
+        )
     
     ### render text
-    paste("Vaccine doses distributed by province/territory in the last", input$window_choropleth_overview_vaccine_distribution, "days")
+    if (input$scale_choropleth_overview_vaccine_administration == "per-capita") {
+      paste("Vaccine doses distributed per 100,000 by province/territory in the last", input$window_choropleth_overview_vaccine_administration, "days")
+    } else {
+      paste("Vaccine doses distributed by province/territory in the last", input$window_choropleth_overview_vaccine_administration, "days")  
+    }
+    
+    
   })
   
   # province vaccine administration map for overview tab
   output$plot_choropleth_overview_vaccine_distribution <- renderPlotly({
     
     ### don't run without inputs defined
-    req(input$window_choropleth_overview_vaccine_distribution)
+    req(input$window_choropleth_overview_vaccine_distribution,
+        input$scale_choropleth_overview_vaccine_distribution,
+        )
     
     ### join provincial vaccine numbers for relevant window to provincial map
+    ### Add per-capita values for toggle
     dat <- geo_prov_simple %>%
       left_join(
         data_ts_vaccine_distribution() %>%
-          select(province_short, dvaccine) %>%
+          select(province_short, dvaccine, pop) %>%
           group_by(province_short) %>%
           slice_tail(n = input$window_choropleth_overview_vaccine_distribution) %>%
-          summarize(dvaccine = sum(dvaccine), .groups = "drop"),
+          summarize(dvaccine = sum(dvaccine), 
+                    dvaccine_per_capita = dvaccine / pop * 100000,
+                    .groups = "drop"),
         by = "province_short"
       )
     
     ### even out colour scale by rooting vaccine numbers
     dat <- dat %>%
-      mutate(cases_colour = dvaccine^(1/3))
+      mutate(cases_colour = dvaccine^(1/3),
+             cases_per_capita_colour = dvaccine_per_capita^(1/3)
+             )
     
     ### define value labels
     labs <- data.frame(
@@ -988,12 +1139,24 @@ server <- function(input, output, session) {
       x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
       lab_cases = format(dat[["dvaccine"]], big.mark = ",", trim = TRUE),
+      lab_cases_per_capita = format(dat[["dvaccine_per_capita"]], big.mark = ",", trim = TRUE),
       ### arrows for NS, NB, PE to avoid overlap
       show_arrow = ifelse(dat[["province_short"]] %in% c("NS", "NB", "PE"), TRUE, FALSE),
       arrow_x = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 1]),
       arrow_y = as.numeric(st_coordinates(suppressWarnings((st_centroid(dat))))[, 2]),
       stringsAsFactors = FALSE
     )
+    
+    if (input$scale_choropleth_overview_vaccine_distribution == "per-capita") {
+      labs <- labs %>%
+        mutate(
+          lab_cases = format(dat[["dvaccine_per_capita"]] %>% round(1), big.mark = ",", trim = TRUE)
+        )
+      dat <- dat %>% 
+        mutate(
+          cases_colour = cases_per_capita_colour
+        )
+    }
     
     ### nudge labels
     labs <- choropleth_label_nudger(labs)
@@ -1076,6 +1239,16 @@ server <- function(input, output, session) {
         ),
         width = 12,
         align = "center"
+      ),
+      column(
+        width = 12,
+        align = "center",
+        radioButtons(
+          "scale_choropleth_overview_vaccine_distribution",
+          "Absolute/per-capita",
+          choices = c("Absolute" = "absolute", "Per-capita" = "per-capita"),
+          selected = "absolute"
+        )
       )
     )
   })
