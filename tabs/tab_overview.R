@@ -60,6 +60,16 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                   tabsetPanel(
                                     type = "tabs",
                                     tabPanel(
+                                      "% Fully vaccinated",
+                                      uiOutput("ui_plot_choropleth_overview_vaccine_full_pct"),
+                                      uiOutput("ui_window_choropleth_overview_vaccine_full_pct"),
+                                    ),
+                                    tabPanel(
+                                      "% At least one dose",
+                                      uiOutput("ui_plot_choropleth_overview_vaccine_at_least_one_dose"),
+                                      uiOutput("ui_window_choropleth_overview_vaccine_at_least_one_dose"),
+                                    ),
+                                    tabPanel(
                                       "Administered",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_administration"),
                                       uiOutput("ui_window_choropleth_overview_vaccine_administration"),
@@ -73,16 +83,6 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                       "% Administered of total distributed",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_admin_pct"),
                                       uiOutput("ui_window_choropleth_overview_vaccine_admin_pct"),
-                                    ),
-                                    tabPanel(
-                                      "% At least one dose",
-                                      uiOutput("ui_plot_choropleth_overview_vaccine_at_least_one_dose"),
-                                      uiOutput("ui_window_choropleth_overview_vaccine_at_least_one_dose"),
-                                    ),
-                                    tabPanel(
-                                      "% Fully vaccinated",
-                                      uiOutput("ui_plot_choropleth_overview_vaccine_full_pct"),
-                                      uiOutput("ui_window_choropleth_overview_vaccine_full_pct"),
                                     )
                                   ))),
                               HTML("<br>"), # blank line
