@@ -1624,10 +1624,10 @@ server <- function(input, output, session) {
   output$table_prov_overview <- renderDT({
     
     table_overview %>%
-      ### show NA instead of 0 for "people fully vaccinated" (info not yet available)
+      ### show NA instead of 0 for provs without booster info available
       mutate(
-        `Cumulative people fully vaccinated` = ifelse(`Cumulative people fully vaccinated` == 0, NA, `Cumulative people fully vaccinated`),
-        `People fully vaccinated (new)` = ifelse(`Cumulative people fully vaccinated` == 0, NA, `People fully vaccinated (new)`)
+        `Cumulative additional doses` = ifelse(`Cumulative additional doses` == 0, NA, `Cumulative additional doses`),
+        `Additional doses (new)` = ifelse(`Cumulative additional doses` == 0, NA, `Additional doses (new)`)
       ) %>%
       ### merge short names
       left_join(map_prov %>% select(province, province_short),
@@ -1646,7 +1646,7 @@ server <- function(input, output, session) {
                       ### freeze province column
                       fixedColumns = list(leftColumns = 1)
                     )) %>%
-      formatRound(columns = c("Cumulative cases", "Cases (new)", "Active cases", "Active cases (change)", "Cumulative vaccine doses administered", "Vaccine doses administered (new)", "Cumulative people fully vaccinated", "People fully vaccinated (new)", "Hospitalized", "Hospitalized (change)", "Cumulative deaths", "Deaths (new)", "Cumulative recovered", "Recovered (new)", "Cumulative testing", "Testing (new)"), digits = 0) %>%
+      formatRound(columns = c("Cumulative cases", "Cases (new)", "Active cases", "Active cases (change)", "Cumulative vaccine doses administered", "Vaccine doses administered (new)", "Cumulative people fully vaccinated", "People fully vaccinated (new)", "Cumulative additional doses", "Additional doses (new)", "Hospitalized", "Hospitalized (change)", "Cumulative deaths", "Deaths (new)", "Cumulative recovered", "Recovered (new)", "Cumulative testing", "Testing (new)"), digits = 0) %>%
       formatRound(columns = c("Cases (new) per 100k", "Cumulative cases per 100k", "Active cases per 100k", "Hospitalized per 100k", "Cumulative deaths per 100k"), digits = 1) %>%
       formatRound(columns = c("Cumulative testing per 100k"), digits = 0)
   })

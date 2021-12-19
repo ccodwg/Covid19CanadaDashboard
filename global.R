@@ -69,9 +69,11 @@ files <- matrix(
     "ts_vaccine_administration", "data/vaccine_administration_timeseries_prov.csv",
     "ts_vaccine_distribution", "data/vaccine_distribution_timeseries_prov.csv",
     "ts_vaccine_completion", "data/vaccine_completion_timeseries_prov.csv",
+    "ts_vaccine_additionaldoses", "data/vaccine_additionaldoses_timeseries_prov.csv",
     "ts_vaccine_administration_canada", "data/vaccine_administration_timeseries_canada.csv",
     "ts_vaccine_distribution_canada", "data/vaccine_distribution_timeseries_canada.csv",
     "ts_vaccine_completion_canada", "data/vaccine_completion_timeseries_canada.csv",
+    "ts_vaccine_additionaldoses_canada", "data/vaccine_additionaldoses_timeseries_canada.csv",
     "hosp", "data/hosp.csv",
     "map_hr", "data/hr_map.csv",
     "map_prov", "data/prov_map.csv",
@@ -255,6 +257,13 @@ table_overview <- ts_cases %>%
     by = "province"
   ) %>%
   left_join(
+    ts_vaccine_additionaldoses %>%
+      group_by(province) %>%
+      filter(date_vaccine_additionaldoses == date_max) %>%
+      select(province, additionaldosesvaccine, cumulative_additionaldosesvaccine),
+    by = "province"
+  ) %>%
+  left_join(
     map_prov %>%
       select(province, pop),
     by = "province"
@@ -263,6 +272,7 @@ table_overview <- ts_cases %>%
          active_cases, active_cases_change,
          avaccine, cumulative_avaccine,
          cvaccine, cumulative_cvaccine,
+         additionaldosesvaccine, cumulative_additionaldosesvaccine,
          hosp_cases, hosp_cases_change,
          deaths, cumulative_deaths,
          recovered, cumulative_recovered,
@@ -278,7 +288,9 @@ table_overview <- ts_cases %>%
       "cumulative_avaccine" = ts_vaccine_administration_canada %>% filter(date_vaccine_administered == date_max) %>% pull(cumulative_avaccine),
       "avaccine" = ts_vaccine_administration_canada %>% filter(date_vaccine_administered == date_max) %>% pull(avaccine),
       "cumulative_cvaccine" = ts_vaccine_completion_canada %>% filter(date_vaccine_completed == date_max) %>% pull(cumulative_cvaccine),
-      "cvaccine" = ts_vaccine_completion_canada %>% filter(date_vaccine_completed == date_max) %>% pull(cvaccine),     
+      "cvaccine" = ts_vaccine_completion_canada %>% filter(date_vaccine_completed == date_max) %>% pull(cvaccine),
+      "cumulative_additionaldosesvaccine" = ts_vaccine_additionaldoses_canada %>% filter(date_vaccine_additionaldoses == date_max) %>% pull(cumulative_additionaldosesvaccine),
+      "additionaldosesvaccine" = ts_vaccine_additionaldoses_canada %>% filter(date_vaccine_additionaldoses == date_max) %>% pull(additionaldosesvaccine),
       "hosp_cases" = sum(hosp$hosp_cases),
       "hosp_cases_change" = sum(hosp$hosp_cases_change),
       "deaths" = ts_mortality_canada %>% filter(date_death_report == date_max) %>% pull(deaths),
@@ -298,6 +310,8 @@ table_overview <- ts_cases %>%
                   cumulative_avaccine = 0,
                   cvaccine = 0,
                   cumulative_cvaccine = 0,
+                  additionaldosesvaccine = 0,
+                  cumulative_additionaldosesvaccine = 0,
                   hosp_cases = 0,
                   hosp_cases_change = 0,
                   deaths = 0,
@@ -320,6 +334,7 @@ table_overview <- ts_cases %>%
     active_cases, active_cases_change, active_cases_per_100k,
     avaccine, cumulative_avaccine,
     cvaccine, cumulative_cvaccine,
+    additionaldosesvaccine, cumulative_additionaldosesvaccine,
     hosp_cases, hosp_cases_change, hosp_per_100k,
     cumulative_deaths, deaths, cumulative_deaths_per_100k,
     cumulative_recovered, recovered,
@@ -338,6 +353,8 @@ table_overview <- ts_cases %>%
     `Cumulative vaccine doses administered` = cumulative_avaccine,
     `People fully vaccinated (new)` = cvaccine,
     `Cumulative people fully vaccinated` = cumulative_cvaccine,
+    `Additional doses (new)` = additionaldosesvaccine,
+    `Cumulative additional doses` = cumulative_additionaldosesvaccine,
     `Hospitalized per 100k` = hosp_per_100k,
     `Hospitalized` = hosp_cases,
     `Hospitalized (change)` = hosp_cases_change,
