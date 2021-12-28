@@ -8,7 +8,7 @@ server <- function(input, output, session) {
       text = readLines("text/alert_text.html"),
       type = "",
       html = TRUE,
-      size = "s",
+      size = "m",
       closeOnClickOutside = TRUE,
       closeOnEsc = TRUE
     ) 
