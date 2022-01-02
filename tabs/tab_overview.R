@@ -24,7 +24,7 @@ tab_overview <- tabItem(tabName = "tab_overview",
                               p(HTML("<br><br>")),
                               p(HTML(
                                 paste0("<b><h1 style='font-size:18px'>Last updated: ", update_time, "</h1></b>"))),
-                              fluidRow(box(HTML(gsub("\n", "<br>", news)), title = "Daily update notes (click + to expand)", width = 12, collapsible = TRUE, collapsed = TRUE)),
+                              fluidRow(box(HTML(gsub("\n", "<br>", data_notes)), title = "Daily update notes (click + to expand)", width = 12, collapsible = TRUE, collapsed = TRUE)),
                               p(
                                 "Reported cases are cumulative and include both confirmed and presumptive positive cases. Repatriated cases are included in the total but not shown in the map below."
                               ),

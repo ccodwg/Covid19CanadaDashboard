@@ -16,7 +16,7 @@ unzip(temp, exdir = tempd)
 ## copy data
 if (dir.exists(paste(tempd, "Covid19Canada-master", sep = "/"))) {
   for (f in list.files(paste(tempd, "Covid19Canada-master", sep = "/"), recursive = TRUE, full.names = TRUE)[basename(list.files(paste(tempd, "Covid19Canada-master", sep = "/"), recursive = TRUE)) %in% c(
-    "update_time.txt",
+    "update_time.txt", "data_notes.txt",
     "cases_timeseries_prov.csv", "mortality_timeseries_prov.csv", "recovered_timeseries_prov.csv", "testing_timeseries_prov.csv", "active_timeseries_prov.csv",
     "cases_timeseries_hr.csv", "mortality_timeseries_hr.csv",
     "cases_timeseries_canada.csv", "mortality_timeseries_canada.csv", "recovered_timeseries_canada.csv", "testing_timeseries_canada.csv", "active_timeseries_canada.csv",
@@ -69,13 +69,3 @@ write.csv(hosp, "data/hosp.csv", row.names = FALSE)
 # delete temporary files
 unlink(temp) # delete GitHub download
 unlink(paste(tempd, "Covid19Canada-master", sep = "/"), recursive = TRUE) # delete unzipped files
-
-# write latest commit message
-cat("\n", file = "data/news.txt")
-news <- try(fromJSON("https://api.github.com/repos/ccodwg/Covid19Canada/events"))
-if (!"try-error" %in% class(news)) {
-  news <- try(news[[1]]$payload$commits[[1]]$message)
-  if (!"try-error" %in% class(news)) {
-    cat(paste0(news, "\n"), file = "data/news.txt")
-  }
-}
