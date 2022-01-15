@@ -20,7 +20,6 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                   valueBoxOutput("value_box_summary_testing", width = 3)
                                 )
                               ),
-                              column(includeHTML("text/vaccine_text.html"), width = 12, align = "center"),
                               p(HTML("<br><br>")),
                               p(HTML(
                                 paste0("<b><h1 style='font-size:18px'>Last updated: ", update_time, "</h1></b>"))),
@@ -60,15 +59,15 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                   tabsetPanel(
                                     type = "tabs",
                                     tabPanel(
-                                      "% Fully vaccinated",
+                                      "% 2 doses",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_full_pct"),
                                       uiOutput("ui_window_choropleth_overview_vaccine_full_pct"),
                                     ),
-                                    tabPanel(
-                                      "% At least one dose",
-                                      uiOutput("ui_plot_choropleth_overview_vaccine_at_least_one_dose"),
-                                      uiOutput("ui_window_choropleth_overview_vaccine_at_least_one_dose"),
-                                    ),
+                                    # tabPanel(
+                                    #   "% At least one dose",
+                                    #   uiOutput("ui_plot_choropleth_overview_vaccine_at_least_one_dose"),
+                                    #   uiOutput("ui_window_choropleth_overview_vaccine_at_least_one_dose"),
+                                    # ),
                                     tabPanel(
                                       "Administered",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_administration"),

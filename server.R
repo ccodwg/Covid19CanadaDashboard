@@ -396,7 +396,7 @@ server <- function(input, output, session) {
   
   ## people fully vaccinated
   output$value_box_summary_fully_vaccinated <- renderValueBox({
-    value_box_summary(table_overview, "Cumulative people fully vaccinated", "People fully vaccinated (new)", "People fully vaccinated", "aqua", update_type = "new", val_cum_format = "million")
+    value_box_summary(table_overview, "Cumulative people w/ 2 doses", "People w/ 2 doses (new)", "People fully vaccinated", "aqua", update_type = "new", val_cum_format = "million")
   })
   
   ## hospitalized
@@ -1509,7 +1509,7 @@ server <- function(input, output, session) {
       format("%b %d, %Y")
     
     ### render text
-    paste("Percent fully vaccinated by province/territory as of", last_day)
+    paste("Percent w/ 2 doses by province/territory as of", last_day)
     
   })
     
@@ -1646,7 +1646,7 @@ server <- function(input, output, session) {
                       ### freeze province column
                       fixedColumns = list(leftColumns = 1)
                     )) %>%
-      formatRound(columns = c("Cumulative cases", "Cases (new)", "Active cases", "Active cases (change)", "Cumulative vaccine doses administered", "Vaccine doses administered (new)", "Cumulative people fully vaccinated", "People fully vaccinated (new)", "Cumulative additional doses", "Additional doses (new)", "Hospitalized", "Hospitalized (change)", "Cumulative deaths", "Deaths (new)", "Cumulative recovered", "Recovered (new)", "Cumulative testing", "Testing (new)"), digits = 0) %>%
+      formatRound(columns = c("Cumulative cases", "Cases (new)", "Active cases", "Active cases (change)", "Cumulative vaccine doses administered", "Vaccine doses administered (new)", "Cumulative people w/ 2 doses", "People w/ 2 doses (new)", "Cumulative additional doses", "Additional doses (new)", "Hospitalized", "Hospitalized (change)", "Cumulative deaths", "Deaths (new)", "Cumulative recovered", "Recovered (new)", "Cumulative testing", "Testing (new)"), digits = 0) %>%
       formatRound(columns = c("Cases (new) per 100k", "Cumulative cases per 100k", "Active cases per 100k", "Hospitalized per 100k", "Cumulative deaths per 100k"), digits = 1) %>%
       formatRound(columns = c("Cumulative testing per 100k"), digits = 0)
   })
@@ -2753,9 +2753,9 @@ server <- function(input, output, session) {
     req(input$prov)
     
     if (input$prov != "all") {
-      paste("Percent fully vaccinated in", input$prov)
+      paste("Percent w/ 2 doses in", input$prov)
     } else {
-      "Percent fully vaccinated in Canada"
+      "Percent w/ 2 doses in Canada"
     }
     
   })
@@ -2781,7 +2781,7 @@ server <- function(input, output, session) {
         hoverinfo = "text",
         hovertext = ~ paste0(
           "Province: ", dat$province_short, "\n",
-          "Fully vaccinated", ": ", dat$cumulative_cvaccine, "\n",
+          "2 doses", ": ", dat$cumulative_cvaccine, "\n",
           "Percent of total population: ", dat$lab_percent
         )
       ) %>% 
@@ -3072,7 +3072,7 @@ server <- function(input, output, session) {
         "Total doses administered" = current_cum,
         "7-day rolling average of doses administered" = roll_avg,
         "Remaining doses needed<sup> a</sup>" = total_remaining,
-        !!paste0("Expected date to reach ", input$pct_vaccination, "% fully vaccinated", "<sup> b</sup>") := date_to_vaxx)
+        !!paste0("Expected date to reach ", input$pct_vaccination, "% w/ 2 doses", "<sup> b</sup>") := date_to_vaxx)
     
     table_time_to_pct_vaccination %>%
       DT::datatable(class = "stripe compact hover", 
