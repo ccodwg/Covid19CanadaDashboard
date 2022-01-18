@@ -3035,7 +3035,8 @@ server <- function(input, output, session) {
   # summary table for time to percent vaccinated by province
   output$table_prov_time_to_pct_vaccination <- renderDT({
     
-    req(input$prov, input$date_range, input$pct_vaccination)
+    # req(input$prov, input$date_range, input$pct_vaccination)
+    req(input$prov, input$date_range)
     
     ## create dataframe by province
     table_time_to_pct_vaccination <- data_ts_vaccine_administration() %>% 
@@ -3056,34 +3057,34 @@ server <- function(input, output, session) {
       filter(date_vaccine_administered == max(date_vaccine_administered)) %>% 
       ungroup() %>% 
       left_join(map_prov, by = "province") %>% 
-      dplyr::mutate(
-        total_needed = (input$pct_vaccination/100) * 2 * pop,
-        total_remaining = total_needed - current_cum,
-        date_to_vaxx = max(date_vaccine_administered) + round((total_remaining) / roll_avg, 0),
-        days_to_vaxx = date_to_vaxx - date_vaccine_administered,
-        weeks_to_vaxx = as.numeric(days_to_vaxx) / 7,
-        mths_to_vaxx = as.numeric(days_to_vaxx) / 12
-      ) %>% 
+      # dplyr::mutate(
+        # total_needed = (input$pct_vaccination/100) * 2 * pop,
+        # total_remaining = total_needed - current_cum,
+        # date_to_vaxx = max(date_vaccine_administered) + round((total_remaining) / roll_avg, 0),
+        # days_to_vaxx = date_to_vaxx - date_vaccine_administered,
+        # weeks_to_vaxx = as.numeric(days_to_vaxx) / 7,
+        # mths_to_vaxx = as.numeric(days_to_vaxx) / 12
+      # ) %>% 
       mutate_if(is.numeric, round, 1) %>%
-      select(province, pop, current_cum, roll_avg, total_remaining, date_to_vaxx) %>% 
+      select(province, pop, current_cum, roll_avg) %>% #total_remaining, date_to_vaxx) %>% 
       dplyr::rename(
         "Province" = province,
         "Population" = pop,
         "Total doses administered" = current_cum,
-        "7-day rolling average of doses administered" = roll_avg,
-        "Remaining doses needed<sup> a</sup>" = total_remaining,
-        !!paste0("Expected date to reach ", input$pct_vaccination, "% w/ 2 doses", "<sup> b</sup>") := date_to_vaxx)
+        "7-day rolling average of doses administered" = roll_avg)
+        # "Remaining doses needed<sup> a</sup>" = total_remaining,
+        # !!paste0("Expected date to reach ", input$pct_vaccination, "% w/ 2 doses", "<sup> b</sup>") := date_to_vaxx)
     
     table_time_to_pct_vaccination %>%
       DT::datatable(class = "stripe compact hover", 
                     rownames = FALSE, 
                     extensions = "FixedColumns",
                     escape = FALSE,
-                    caption = tags$caption(
-                      style = "caption-side: bottom; text-align: left; margin: 8px 0;",
-                      p(tags$sup("a "), paste0("Assuming ", input$pct_vaccination, "% of the population receives 2 vaccine doses.")),
-                      p(tags$sup("b "), "The expected date column is calculated based on the 7-day average rate of daily vaccine doses administered and assumes that every individual receives 2 doses. This calculation does not account for delays between doses.")
-                    ),
+                    # caption = tags$caption(
+                      # style = "caption-side: bottom; text-align: left; margin: 8px 0;",
+                      # p(tags$sup("a "), paste0("Assuming ", input$pct_vaccination, "% of the population receives 2 vaccine doses.")),
+                      # p(tags$sup("b "), "The expected date column is calculated based on the 7-day average rate of daily vaccine doses administered and assumes that every individual receives 2 doses. This calculation does not account for delays between doses.")
+                    # ),
                     options = list(
                       dom = "t",
                       paging = FALSE,
@@ -3096,7 +3097,8 @@ server <- function(input, output, session) {
                       ### freeze province column
                       fixedColumns = list(leftColumns = 1:(ncol(.) - 1))
                     )) %>%
-      formatRound(columns = c("Population", "Total doses administered", "Remaining doses needed<sup> a</sup>"), digits = 0) %>%
+      # formatRound(columns = c("Population", "Total doses administered", "Remaining doses needed<sup> a</sup>"), digits = 0) %>%
+      formatRound(columns = c("Population", "Total doses administered"), digits = 0) %>%
       formatRound(columns = "7-day rolling average of doses administered", digits = 1)
     
   })
