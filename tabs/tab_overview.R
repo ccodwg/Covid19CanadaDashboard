@@ -58,6 +58,11 @@ tab_overview <- tabItem(tabName = "tab_overview",
                                   "VaxView",
                                   tabsetPanel(
                                     type = "tabs",
+                                    # tabPanel(
+                                    #   "% boosted",
+                                    #   uiOutput("ui_plot_choropleth_overview_vaccine_boost_pct"),
+                                    #   uiOutput("ui_window_choropleth_overview_vaccine_boost_pct"),
+                                    # ),
                                     tabPanel(
                                       "% 2 doses",
                                       uiOutput("ui_plot_choropleth_overview_vaccine_full_pct"),

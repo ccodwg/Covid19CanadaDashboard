@@ -119,6 +119,18 @@ ts_cases_new_add_hr <- bind_rows(ts_cases_new_add_hr,ts_cases_new_hr[!(ts_cases_
 ts_mortality_new_add_hr <- bind_rows(ts_mortality_new_add_hr,ts_mortality_new_hr[!(ts_mortality_new_hr$province=="Saskatchewan" &
                                                                                 ts_mortality_new_hr$date_death_report=="2020-08-04"),])
 
+# merge additional doses to vaccine administered
+ts_vaccine_administration <- ts_vaccine_administration %>% 
+  dplyr::left_join(ts_vaccine_additionaldoses,
+            by = c("province", 
+                   "date_vaccine_administered" = "date_vaccine_additionaldoses")
+            ) %>% 
+  dplyr::mutate(
+    additionaldosesvaccine = dplyr::if_else(date_vaccine_administered <= as.Date("2021-02-10") & is.na(additionaldosesvaccine), 0L, additionaldosesvaccine),
+    cumulative_additionaldosesvaccine = dplyr::if_else(date_vaccine_administered <= as.Date("2021-02-10") & is.na(cumulative_additionaldosesvaccine), 0L, cumulative_additionaldosesvaccine),
+    dose3vaccine = avaccine + additionaldosesvaccine,
+    cumulative_dose3vaccine = cumulative_avaccine + cumulative_additionaldosesvaccine
+  )
 
 ## add province short codes, full names, and populations to datasets
 for (i in c("ts_cases", "ts_mortality", "ts_recovered", "ts_testing", "ts_active", "ts_vaccine_administration", "ts_vaccine_distribution", "ts_vaccine_completion")) {

@@ -242,6 +242,11 @@ server <- function(input, output, session) {
     get_data("ts_vaccine_completion", "date_vaccine_completed")
   })
   
+  ## vaccine additional doses time series
+  data_ts_vaccine_additionaldoses <- reactive({
+    get_data("ts_vaccine_additionaldoses", "date_vaccine_additionaldoses")
+  })
+  
   ## case time series (health regions)
   data_ts_cases_hr <- reactive({
     get_data("ts_cases_hr", "date_report")
@@ -952,6 +957,7 @@ server <- function(input, output, session) {
     dat <- geo_prov_simple %>%
       left_join(
         data_ts_vaccine_administration() %>%
+          mutate(avaccine = avaccine + additionaldosesvaccine) %>% 
           select(province_short, avaccine, pop) %>%
           group_by(province_short) %>%
           slice_tail(n = input$window_choropleth_overview_vaccine_administration) %>%
@@ -959,7 +965,9 @@ server <- function(input, output, session) {
                     avaccine_per_capita = avaccine / pop * 100000,
                     .groups = "drop"),
         by = "province_short"
-      )
+      ) 
+      
+      
   
     ### even out colour scale by rooting vaccine numbers
     dat <- dat %>%

@@ -66,6 +66,19 @@ hosp <- fromJSON("https://api.covid19tracker.ca/summary/split")$data %>%
 # write hospitalization data
 write.csv(hosp, "data/hosp.csv", row.names = FALSE)
 
+## download vaccine coverage data from PHAC
+download.file("https://health-infobase.canada.ca/src/data/covidLive/vaccination-coverage-map.csv", "data/vaccination_coverage.csv")
+vax_dat <- read.csv("data/vaccination_coverage.csv", stringsAsFactors = FALSE)
+
+# retain and rename relevant variables
+vax_dat <- vax_dat %>%
+  filter(prename != "Canada") %>%
+  select(week_end, prename,
+         numtotal_partially, numtotal_fully, numtotal_additional,
+         proptotal_partially, proptotal_fully, proptotal_additional) %>%
+  rename(date_report = week_end, province = prename)
+
+
 # delete temporary files
 unlink(temp) # delete GitHub download
 unlink(paste(tempd, "Covid19Canada-master", sep = "/"), recursive = TRUE) # delete unzipped files
