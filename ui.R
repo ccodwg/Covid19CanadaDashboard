@@ -65,7 +65,6 @@ ui <- function(req) {
           tabName = "tab_about",
           icon = icon("question-circle")
         ),
-        useShinyalert(),
         tags$footer(
           HTML(
             paste0(
