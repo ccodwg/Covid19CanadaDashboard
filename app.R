@@ -1,11 +1,10 @@
-# define global
+# load pipe
+library(magrittr)
+
+# source components
 source("global.R")
-
-# define UI
 source("ui.R")
-
-# define server
 source("server.R")
 
 # run app
-shinyApp(ui, server)
+shiny::shinyApp(ui, server)
