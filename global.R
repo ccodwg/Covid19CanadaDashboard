@@ -58,24 +58,168 @@ for (f in files) {
   }
 }
 
-# set constants
+### FINDS start state for this calendar year (simplified function of MMWRweek package)
+### Start of week is Monday
 
-## PT colour palette
-palette_pt <- list(
-  "AB" = "#00E676",
-  "BC" = "#304FFE",
-  "MB" = "#FF80AB",
-  "NB" = "#76FF03",
-  "NL" = "#B388FF",
-  "NS" = "#00E5FF",
-  "NT" = "#00ACC1",
-  "NU" = "#FFFF00",
-  "ON" = "#FF6F00",
-  "PE" = "#1B5E20",
-  "QC" = "#D50000",
-  "SK" = "#AA00FF",
-  "YT" = "#D500F9"
-)
+start_week_calc <- function(week, year){
+  begin_date <- function(year) {
+    jan1 <- as.Date(paste0(year, "-01-01"))
+    wday <- as.numeric(lubridate::wday(jan1, week_start = 1))
+    date <- jan1 - (wday-1) + 7*(wday>4)
+    return(date)
+  }
+  jan1 <- begin_date(year)
+  return(jan1 + (week-1)*7)
+}
+
+##### ----- FUNCTION to process data: PROVINCE/ TERRITORIES
+### Variable names are standardized but include option to identify different value (cumulative vs daily)
+### TYPE == type of data: "mean" (wastewater); or "total" (mortality, hospitalizations)
+### ALSO ADDS week 53 to week 52 data (and if week 53 is NAN, then == 0 for addition)
+
+process_pt_data <- function(data, val, type){
+  
+  names(data)[names(data) == val] <- "val"
+  
+  if(type == "mean"){
+    
+  data <- data %>% 
+    dplyr::mutate(year = lubridate::year(date), week = lubridate::week(date)) %>%
+    dplyr::group_by(region, year, week) %>% dplyr::summarise(mean = mean(val, na.rm = T), .groups = "keep") 
+  
+  data <- data %>% dplyr::rename(val = mean) %>%
+    dplyr::mutate(date = start_week_calc(week, year))
+  
+  }
+  
+  if(type == "total"){
+    
+    data <- data %>% 
+      dplyr::mutate(year = lubridate::year(date), week = lubridate::week(date)) %>%
+      dplyr::group_by(region, year, week) %>% dplyr::summarise(total = sum(val, na.rm = T), .groups = "keep") 
+    
+    data <- data %>% dplyr::rename(val = total) %>%
+      dplyr::mutate(date = start_week_calc(week, year))
+  }
+
+  ### Separates out week 53 so it can be added to week 52
+  w53 <- data[(data$week==53),]
+  w53$week <- 52
+  w53 <- w53[c("week","year","region","val")]
+  colnames(w53) <- c("week","year","region","val_add")
+  
+  data <- data[(data$week!=53),]
+  data <- merge(data,w53, by = c("week","year","region"), all.x = T)
+  data$val <- rowSums(data[c("val","val_add")], na.rm = T)
+  
+  data <- data[c("week","year","date","region","val")]
+  names(data)[names(data) == "val"] <- val
+  
+  ### ADD AREAS - FACTOR ACCORDINGLY
+  
+  data$area <- NA
+  data$area[data$region=="NL" | data$region=="NS" | data$region=="PE" | data$region=="NB"] <- "Atlantic Canada"
+  data$area[data$region=="ON" | data$region=="QC"] <- "Central Canada"
+  data$area[data$region=="MB" | data$region=="AB" | data$region=="SK" | data$region=="BC"] <- "Western / Prairie Provinces"
+  data$area[data$region=="NT" | data$region=="NU" | data$region=="YT"] <- "Northern Canada"
+  
+  return(data)
+  
+}
+
+
+process_hr_data <- function(data, hr, pt, val, type){
+  
+  names(data)[names(data) == val] <- "val"
+  names(data)[names(data) == hr] <- "hr"
+  names(data)[names(data) == pt] <- "pt"
+  
+  areas <- data[c("hr","pt")]
+  areas$unique <- duplicated(areas$hr)
+  areas <- areas[(areas$unique==FALSE),]
+  
+  if(type == "mean"){
+    
+    data <- data %>%
+      dplyr::mutate(year = lubridate::year(date), week = lubridate::week(date)) %>%
+      dplyr::group_by(hr, year, week) %>% dplyr::summarise(mean = mean(val, na.rm = T), .groups = "keep") 
+    
+    data <- data %>% dplyr::rename(val = mean) %>%
+      dplyr::mutate(date = start_week_calc(week, year))
+    
+  }
+  
+  if(type == "total"){
+    
+    data <- data %>%
+      dplyr::mutate(year = lubridate::year(date), week = lubridate::week(date)) %>%
+      dplyr::group_by(hr, year, week) %>% dplyr::summarise(total = sum(val, na.rm = T), .groups = "keep") 
+    
+    data <- data %>% dplyr::rename(val = total) %>%
+      dplyr::mutate(date = start_week_calc(week, year))
+  
+  }
+
+  ### Separates out week 53 so it can be added to week 52
+  w53 <- data[(data$week==53),]
+  w53$week <- 52
+  w53 <- w53[c("week","year","hr","val")]
+  colnames(w53) <- c("week","year","hr","val_add")
+  
+  data <- data[(data$week!=53),]
+  data <- merge(data,w53, by = c("week","year","hr"), all.x = T)
+  data$val <- rowSums(data[c("val","val_add")], na.rm = T)
+  
+  data <- data[c("week","year","date","hr","val")]
+  names(data)[names(data) == "val"] <- val
+  
+  ### ADD AREAS - FACTOR ACCORDINGLY
+  
+  areas$area <- NA
+  areas$area[areas$pt=="NL" | areas$pt=="NS" | areas$pt=="PE" | areas$pt=="NB"] <- "Atlantic Canada"
+  areas$area[areas$pt=="ON" | areas$pt=="QC"] <- "Central Canada"
+  areas$area[areas$pt=="MB" | areas$pt=="AB" | areas$pt=="SK" | areas$pt=="BC"] <- "Western / Prairie Provinces"
+  areas$area[areas$pt=="NT" | areas$pt=="NU" | areas$pt=="YT"] <- "Northern Canada"
+  
+  atlantic_can <- areas$hr[areas$area=="Atlantic Canada"]
+  central_can <- areas$hr[areas$area=="Central Canada"]
+  western_can <- areas$hr[areas$area=="Western / Prairie Provinces"]
+  northern_can <- areas$hr[areas$area=="Northern Canada"]
+  
+  data$area[data$hr %in% atlantic_can] <- "Atlantic Canada"
+  data$area[data$hr %in% central_can] <- "Central Canada"
+  data$area[data$hr %in% western_can] <- "Western / Prairie Provinces"
+  data$area[data$hr %in% northern_can] <- "Northern Canada"
+  
+  names(data)[names(data) == "hr"] <- "region" # rename to region for simplicity
+  
+  return(data)
+  
+}
+
+##### ----- WASTEWATER DATA
+
+#!!!# For now, fix missing regional data:
+wastewater_data$region[wastewater_data$sub_region_1=="Saskatoon"] <- "SK"
+wastewater_data$region[wastewater_data$sub_region_1=="Prince Albert"] <- "SK"
+wastewater_data$region[wastewater_data$sub_region_1=="North Battleford"] <- "SK"
+wastewater_data$region[wastewater_data$sub_region_1=="Moncton"] <- "NB"
+
+wastewater_pt <- process_pt_data(wastewater_data,"value","mean")
+wastewater_hr <- process_hr_data(wastewater_data,"sub_region_1","region","value","mean")
+
+wastewater_pt$area <- factor(wastewater_pt$area, levels = c("Western / Prairie Provinces","Central Canada","Atlantic Canada"))
+wastewater_hr$area <- factor(wastewater_hr$area, levels = c("Western / Prairie Provinces","Central Canada","Atlantic Canada"))
+
+##### ----- HOSPITALIZATION DATA
+
+hospitalization_data <- process_pt_data(hospitalizations_pt,"value","total")
+hospitalization_data$area <- factor(hospitalization_data$area, levels = c("Western / Prairie Provinces","Central Canada","Atlantic Canada","Northern Canada"))
+
+##### ----- MORTALITY DATA
+
+mortality_data <- process_pt_data(deaths_pt,"value_daily","total")
+mortality_data$area <- factor(mortality_data$area, levels = c("Western / Prairie Provinces","Central Canada","Atlantic Canada","Northern Canada"))
 
 # load analytics (if available)
 analytics <- if (file.exists("google-analytics.html")) {
